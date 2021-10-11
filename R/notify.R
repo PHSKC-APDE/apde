@@ -3,7 +3,7 @@ suppressWarnings(library(keyring)) # Access stored credentials
 suppressWarnings(library(glue)) # Safely combine code and variables
 suppressWarnings(library(blastula)) # Email functionality
 
-devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/population/master/db_loader/create_db_connection.R")
+devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/apde/main/R/create_db_connection.R")
 
 apde_notify_address_add_f <- function(address) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
