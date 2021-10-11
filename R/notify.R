@@ -2,6 +2,11 @@ suppressWarnings(library(odbc)) # Read to and write from SQL
 suppressWarnings(library(keyring)) # Access stored credentials
 suppressWarnings(library(glue)) # Safely combine code and variables
 suppressWarnings(library(blastula)) # Email functionality
+suppressWarnings(library(svDialogs)) # Create multi-select pop-ups
+suppressWarnings(library(tidyverse)) # Manipulate data
+suppressWarnings(library(dplyr)) # Manipulate data
+suppressWarnings(library(lubridate)) # Manipulate dates
+
 
 devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/apde/main/R/create_db_connection.R")
 
@@ -78,4 +83,47 @@ apde_notify_f <- function(msg_name,
       subject = glue::glue(msg$msg_subject),
       credentials = creds_key("outlook")
     )
+}
+
+apde_notify_list_update_f <- function() {
+  conn <- create_db_connection("hhsaw", interactive = F, prod = T)
+  msgs <- DBI::dbGetQuery(conn, 
+                          "SELECT * 
+                          FROM [apde].[notify_msgs] 
+                          ORDER BY [msg_name]")
+  msg_id <- dlg_list(as.list(msgs$msg_name), 
+                           multiple = F,
+                           title = "Select List to Update")$res
+  msg_id <- msgs[msgs$msg_name == msg_id, ]$id
+  address_list <- DBI::dbGetQuery(conn, 
+                                  "SELECT * 
+                                  FROM [apde].[notify_addresses] 
+                                  ORDER BY [address]")
+  current_list <- DBI::dbGetQuery(conn, 
+                                  glue::glue_sql("SELECT A.[address] 
+                                                 FROM [apde].[notify_list] L                                    
+                                                 INNER JOIN [apde].[notify_addresses] A ON L.[address_id] = A.[id]                                   
+                                                 WHERE L.[msg_id] = {msg_id}",
+                                                 .con = conn))
+  new_list <- dlg_list(as.list(address_list$address), 
+                       multiple = T,
+                       preselect = as.list(current_list$address),
+                       title = "Select Addresses for List")$res
+  DBI::dbExecute(conn, 
+                 glue::glue_sql("DELETE FROM [apde].[notify_list]                             
+                                WHERE [msg_id] = {msg_id}",                              
+                                .con = conn))
+  if(length(new_list) > 0) {
+    new_list <- as.data.frame(new_list)
+    colnames(new_list) <- c("address")
+    new_list <- inner_join(new_list, address_list)
+    for(i in 1:nrow(new_list)) {
+      DBI::dbExecute(conn, 
+                      glue::glue_sql("INSERT INTO [apde].[notify_list]
+                                     ([msg_id], [address_id])
+                                     VALUES
+                                     ({msg_id}, {new_list[i,]$id})",
+                                     .con = conn))
+    }
+  }
 }
