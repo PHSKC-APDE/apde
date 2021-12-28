@@ -78,7 +78,8 @@ apde_notify_msg_get_f <- function(msg_id = NULL,
   msg <- DBI::dbGetQuery(conn, 
                          glue::glue_sql("SELECT TOP (1) *                                               
                                         FROM [apde].[notify_msgs]                                                                           
-                                        WHERE [id] = {msg_id}",                                                                                                      
+                                        WHERE [id] = {msg_id}
+                                          AND [msg_parent] IS NULL",                                                                                                      
                                         .con = conn))
   return(msg)
 }
