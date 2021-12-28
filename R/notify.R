@@ -30,7 +30,7 @@ apde_notify_msg_set_f <- function(msg_id = 0,
     msg <- apde_notify_msg_get_f(msg_id)
     if(msg$msg_name == msg_name & msg$msg_subject == msg_subject & 
         msg$msg_body == msg_body & msg$msg_from == msg_from) {
-      stop("No changes made.")
+      return(msg_id)
     }
   }
   DBI::dbExecute(conn, 
