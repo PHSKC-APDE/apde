@@ -70,8 +70,9 @@ apde_notify_msg_set_f <- function(msg_id = 0,
 apde_notify_msg_get_f <- function(msg_id = NULL,
                                   msg_name = NULL) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
-  msg_id <- apde_notify_msg_id_get_f(msg_id = msg_id,
-                                     msg_name = msg_name)
+  if(is.null(msg_id)) {
+    msg_id <- apde_notify_msg_id_get_f(msg_name = msg_name)
+  }
   if(is.null(msg_id)) {
     stop("No Message in the system with the provided Name or ID.")
   }
@@ -226,6 +227,7 @@ apde_notify_list_set_f <- function(msg_id = NULL,
     }
   }
 }
+
 apde_notify_f <- function(msg_id = NULL,
                           msg_name = NULL,
                           vars) {
@@ -414,4 +416,3 @@ apde_notify_menu_f <- function() {
 
 
 
-apde_notify_menu_f()
