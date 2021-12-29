@@ -230,8 +230,9 @@ apde_notify_f <- function(msg_id = NULL,
                           msg_name = NULL,
                           vars) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
-  msg_id <- apde_notify_msg_id_get_f(msg_id = msg_id,
-                                     msg_name = msg_name)
+  if(is.null(msg_id)) {
+    msg_id <- apde_notify_msg_id_get_f(msg_name = msg_name)  
+  }
   if(is.null(msg_id)) {
     stop("No Message in the system with the provided Name or ID.")
   }
