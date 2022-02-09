@@ -375,7 +375,12 @@ load_table_from_file <- function(conn,
     
     
     ## Run loading function, can use defaults for everything ----
-    loading_process()
+    loading_process(
+      to_table_inner = to_table,
+      file_path_inner = file_path,
+      field_term_inner = field_term,
+      row_term_inner = row_term
+    )
   }
   
   
@@ -454,11 +459,11 @@ load_table_from_file <- function(conn,
     message("Combining years into a single table")
     if (truncate == T) {
       # Remove data from existing combined table if desired
-      dbGetQuery(conn, glue::glue_sql("TRUNCATE TABLE {`to_schema`}.{`table_name`}", 
+      dbGetQuery(conn, glue::glue_sql("TRUNCATE TABLE {`to_schema`}.{`to_table`}", 
                                       .con = conn))
     }
     
-    if (add_index == T) {
+    if (drop_index == T) {
       # Remove index from combined table if it exists
       # This code pulls out the clustered index name
       index_name <- dbGetQuery(conn, 
@@ -477,13 +482,13 @@ load_table_from_file <- function(conn,
                                                     WHERE name = {`schema`}) s
                                                   ON t.schema_id = s.schema_id) a",
                                               .con = conn,
-                                              table = dbQuoteString(conn, table_name),
+                                              table = dbQuoteString(conn, to_table),
                                               schema = dbQuoteString(conn, to_schema)))[[1]]
       
       if (length(index_name) != 0) {
         dbGetQuery(conn_inner,
                    glue::glue_sql("DROP INDEX {`index_name`} ON 
-                                  {`to_schema`}.{`table_name`}", .con = conn))
+                                  {`to_schema`}.{`to_table`}", .con = conn))
       }
     }
     
@@ -513,7 +518,7 @@ load_table_from_file <- function(conn,
     
     
     # Set up SQL code to load columns
-    sql_combine <- glue::glue_sql("INSERT INTO {`to_schema`}.{`table_name`} WITH (TABLOCK) 
+    sql_combine <- glue::glue_sql("INSERT INTO {`to_schema`}.{`to_table`} WITH (TABLOCK) 
                                     ({`vars`*}) 
                                     SELECT {`vars`*} FROM (", 
                                   .con = conn,
@@ -521,7 +526,7 @@ load_table_from_file <- function(conn,
     
     # For each year check which of the additional columns are present
     lapply(seq_along(combine_years), function(x) {
-      table_name_new <- paste0(table_name, "_", combine_years[x])
+      table_name_new <- paste0(to_table, "_", combine_years[x])
       config_name_new <- paste0("table_", combine_years[x])
       add_vars_name <- paste0("vars_", combine_years[x])
       if (!is.null(names(table_config$vars))) {
@@ -558,7 +563,7 @@ load_table_from_file <- function(conn,
     
     dbGetQuery(conn, sql_combine)
     
-    if (add_index == T) {
+    if (drop_index == T) {
       if (!exists("add_index_f")) {
         devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/claims_data/master/claims_db/db_loader/scripts_general/add_index.R")
       }
