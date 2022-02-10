@@ -449,8 +449,15 @@ load_table_from_file <- function(conn,
       }
       
       
-      ## Run loading function, can use defaults for everything ----
-      loading_process()
+      ## Run loading function ----
+      # Should be able to use defaults for everything, as loading_process(), but some 
+      #  users reported needing to specify parameters
+      loading_process(
+        to_table_inner = to_table,
+        file_path_inner = file_path,
+        field_term_inner = field_term,
+        row_term_inner = row_term
+      )
     })
   }
   
