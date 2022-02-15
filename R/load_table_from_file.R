@@ -339,7 +339,7 @@ load_table_from_file <- function(conn,
     ## Pull out table-specific variables ----
     ### file_path ----
     if (is.null(file_path)) {
-      if (!is.null(server)) {
+      if (!is.null(server) & !is.null(table_config[[server]][["file_path"]])) {
         file_path <- table_config[[server]][["file_path"]]
       } else if (!is.null(table_config$file_path)) {
         file_path <- table_config$file_path
