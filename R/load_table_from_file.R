@@ -84,8 +84,8 @@
 #' `config_file`. Note the requirements under `config`.
 #' @param config_file File path of a YAML config file. Use one of `config`, `config_url`, or 
 #' `config_file`. Note the requirements under `config`.
-#' @param to_schema Name of the schema to apply the index to (if not using YAML input).
-#' @param to_table Name of the table to apply the index to (if not using YAML input).
+#' @param to_schema Name of the schema that data will be loaded to (if not using YAML input).
+#' @param to_table Name of the table that data will be loaded to (if not using YAML input).
 #' @param server_path Name of the SQL server to connect to (if not using YAML input).
 #' @param db_name Name of the database to use (if not using YAML input).
 #' @param file_path File path of data to be loaded (if not using YAML input). If 
@@ -150,8 +150,8 @@ load_table_from_file <- function(conn,
   
   # INITIAL ERROR CHECK ----
   # Check if the config provided is a local file or on a webpage
-  if (!is.null(config) & !is.null(config_url) & !is.null(config_file)) {
-    stop("Specify either alocal config object, config_url, or config_file but only one")
+  if (sum(!is.null(config), !is.null(config_url), !is.null(config_file)) > 1) {
+    stop("Specify either a local config object, config_url, or config_file but only one")
   }
   
   # Check that the yaml config file exists in the right format
@@ -210,7 +210,6 @@ load_table_from_file <- function(conn,
       to_table <- table_config$to_table
     }
   }
-  
   
   ## server_path ----
   if (is.null(server_path)) {

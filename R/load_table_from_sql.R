@@ -1,119 +1,79 @@
-#' @title Load a data file to a SQL table
+#' @title Load data from one SQL table to another
 #' 
-#' @description \code{load_table_from_file} loads a file data to a SQL table using specified variables or a YAML config file.
+#' @description \code{load_table_from_sql} loads data from one SQL table to another using specified variables or a YAML config file.
 #' 
-#' @details This function loads a data file to an already existing SQL table using 
+#' @details This function loads data file to an already existing SQL table using 
 #' specified variables or a YAML configuration file. The function is essentially a 
-#' wrapper for the SQL bulk copy program (BCP) utility using integrated authorization. 
+#' shortcut for SQL code to truncate a table and insert new rows, with added functionality 
+#' for truncating at a certain date and loading from an archive table. 
 #' Users can specify some input functions (e.g., to_table) and rely on the config file 
 #' for the rest of the necessary information. 
 #' For all arguments that could be specified or come from a YAML file, the hierarchy is 
 #' specified > argument under server in YAML > argument not under server in YAML. 
-#' Note that arguments that should not vary between servers (e.g., row_terminator) 
-#' should not be listed under a server in the YAML file.
 #' 
 #' ## Example YAML file with no server or individual years
 #' (Assume the indentation is appropriate)
 #' ```
-#' to_schema: raw
+#' from_schema: stage
+#' from_table: mcaid_elig
+#' to_schema: final
 #' to_table: mcaid_elig
 #' *optional other components like a qa_schema and qa_table, index name, vars, etc.*
-#' server_path: KCITSQLABCD51
-#' db_name: PHClaims
-#' file_path: //path123/importdata/Data/kc_elig_20210519.txt
-#' field_term: \t
-#' row_term: \n
 #' ```
 #' 
 #' ## Example YAML file with servers (phclaims, hhsaw) and individual years
 #' (Assume the indentation is appropriate)
 #' ```
 #' phclaims:
-#'     to_schema: raw
+#'     from_schema: stage
+#'     from_table: mcaid_elig
+#'     to_schema: final
 #'     to_table: mcaid_elig
-#'     server_path: KCITSQLABCD51
-#'     db_name: PHClaims
 #' hhsaw:
-#'     to_schema: raw
-#'     to_table: mciad_elig
-#'     server_path: kcitazxyz20.database.windows.net
-#'     db_name: hhs_analytics_workspace
+#'     from_schema: claims
+#'     from_table: stage_mcaid_elig
+#'     to_schema: claims
+#'     to_table: final_mciad_elig
 #' *optional other components like a qa_schema and qa_table, index name, vars, etc.*
-#' field_term: \t
-#' row_term: \n
-#' years:
-#'     2014
-#'     2015
-#'     2016
-#' 2014:
-#'     file_path: //path123/importdata/Data/kc_elig_2014.txt
-#'     field_term: \|
-#'     row_term: \r
-#' 2015:
-#'     file_path: //path123/importdata/Data/kc_elig_2015.txt  
-#' 2016:
-#'     file_path: //path123/importdata/Data/kc_elig_2016.txt
-#'     field_term: \0
-#'     row_term: \0
 #' ````
 #' 
 #' @param conn SQL server connection created using \code{odbc} package.
 #' @param server Name of server being used (only applies if using a YAML file). 
 #' Useful if the same table is loaded to multiple servers but with different names 
-#' or schema. Note that this is different from the *server_path* argument that is 
-#' used as part of the BCP command; the *server* argument can be any name a user 
-#' wants whereas *server_path* must be the actual server name.
-#' @param overall Load a single table instead of a table for each calendar year. 
-#' Mutually exclusive with *ind_yr* option. Default is TRUE.
-#' @param ind_yr Load multiple tables, one for each calendar year, with a year suffix 
-#' on each table name (e.g., mcaid_elig_2014). Mutually exclusive with *overall* option. 
-#' If using this option, the list of years should be provided via the *years* argument or 
-#' a *years* variable in the YAML file. Default is FALSE.
-#' @param years Vector of individual years to make tables for (if not using YAML input).
-#' @param combine_yr Union year-specific files into a single table. Only applies 
-#' if ind_yr = T. Default is FALSE.
+#' or schema.
 #' @param config Name of object in global environment that contains configuration 
 #' information. Use one of `config`, `config_url`, or `config_file`. 
 #' Should be in a YAML format with at least the following variables: 
-#' *to_schema*, *to_table*, *server_path*, *db_name*, and *file_path*, with possibly 
-#' *field_term*, *row_term*, and *first_row*. 
-#' *to_schema* and *to_table*, *server_path*, and *db_name* should all be nested under 
-#' the server name if applicable, other variables should not (but might be nested 
-#' under a calendar year).
+#' *from_schema*, *from_table*, *to_schema* and *to_table*. 
+#' All mandatory variables should all be nested under the server name if applicable, 
+#' other variables should not.
 #' @param config_url URL of a YAML config file. Use one of `config`, `config_url`, or 
 #' `config_file`. Note the requirements under `config`.
 #' @param config_file File path of a YAML config file. Use one of `config`, `config_url`, or 
 #' `config_file`. Note the requirements under `config`.
-#' @param to_schema Name of the schema to apply the index to (if not using YAML input).
-#' @param to_table Name of the table to apply the index to (if not using YAML input).
-#' @param server_path Name of the SQL server to connect to (if not using YAML input).
-#' @param db_name Name of the database to use (if not using YAML input).
-#' @param file_path File path of data to be loaded (if not using YAML input). If 
-#' ind_yr = T, this should be a named vector with the format 
-#' *c("2014" = "//path1/folder1/file1.ext", "2015" = "//path1/folder1/file2.ext")* 
-#' where the name matches the years to load.
-#' @param field_term Field terminator in the data (if not using YAML input). If 
-#' using ind_yr = T and the terminator differs between calendar years, this should 
-#' be a named vector with the format *c("overall" = "\t", "2014" = "\|", "2016" = "\0")* 
-#' where "overall" supplies the default terminator and the other names match the years 
-#' that differ. Do not use a named vector if overall = T or if there is no variation 
-#' between years. The BCP default is \\t.
-#' @param row_term Row terminator in the data (if not using YAML input). If 
-#' using ind_yr = T and the terminator differs between calendar years, this should 
-#' be a named vector with the format *c("overall" = "\n", "2014" = "\r", "2016" = "\0")* 
-#' where "overall" supplies the default terminator and the other names match the years 
-#' that differ. Do not use a named vector if overall = T or if there is no variation 
-#' between years. The BCP default is \\n.
-#' @param first_row Row number of the first line of data (if not using YAML input). 
-#' Default is 2 (assumes a header row). Currently this must be the same for all years.
-#' @param truncate Truncate existing table prior to loading. Default is TRUE. 
+#' @param from_schema Name of the schema that data will be loaded from (if not using YAML input).
+#' @param from_table Name of the table that data will be loaded from (if not using YAML input).
+#' @param to_schema Name of the schema that data will be loaded to (if not using YAML input).
+#' @param to_table Name of the table that data will be loaded to (if not using YAML input).
+#' @param archive_schema Name of the schema where archived data live (if not using YAML input). 
+#' Must be provided if using truncate_date (either directly or from the YAML).
+#' @param archive_table Name of the table where archived data live (if not using YAML input).
+#' Must be provided if using truncate_date (either directly or from the YAML).
+#' @param truncate Truncate existing table prior to loading. Default is FALSE.
+#' @param truncate_date Truncate existing table at a certain date. Assumes existing table has older data.
+#' Must provide archive_schema and archive_table values (either directly or from the YAML) if using this
+#' option because existing data needs to go somewhere.
+#' @param auto_date Attempt to use from_table data to ascertain the date to use for truncation cutoff.
+#' @param date_var Name of the date variable
+#' @param date_cutpoint Date at which to truncate existing data (if not using YAML input or auto_date).
 #' @param drop_index Drop any existing indices prior to loading data. This can speed 
 #' loading times substantially. Use \code{add_index} to restore the index after. Default is TRUE.
 #' @param test_schema Write to a temporary/development schema when testing out table creation. 
 #' Will use the to_schema (specified or in the YAML file) to make a new table name of  
 #' {to_schema}_{to_table}. Schema must already exist in the database. Most useful 
 #' when the user has an existing YAML file and does not want to overwrite it. 
-#' Only 1,000 rows will be loaded to each table. Default is NULL.
+#' Only 5,000 rows will be loaded to each table (4000 from the archive table if it exists and 1000 from the 
+#' from_table). Default is NULL.
 #'
 #' @examples
 #' \dontrun{
@@ -126,32 +86,35 @@
 #' @export
 #' @md
 
-load_table_from_file <- function(conn,
-                                 server = NULL,
-                                 overall = T,
-                                 ind_yr = F,
-                                 years = NULL,
-                                 combine_yr = F,
-                                 config = NULL,
-                                 config_url = NULL,
-                                 config_file = NULL,
-                                 to_schema = NULL,
-                                 to_table = NULL,
-                                 server_path = NULL,
-                                 db_name = NULL,
-                                 file_path = NULL,
-                                 field_term = NULL,
-                                 row_term = NULL,
-                                 first_row = 2,
-                                 truncate = T,
-                                 drop_index = T,
-                                 test_schema = NULL) {
+load_table_from_sql_f <- function(
+  conn,
+  server = NULL,
+  config = NULL,
+  config_url = NULL,
+  config_file = NULL,
+  from_schema = NULL,
+  from_table = NULL,
+  to_schema = NULL,
+  to_table = NULL,
+  archive_schema = NULL,
+  archive_table = NULL,
+  truncate = F,
+  truncate_date = F,
+  auto_date = F,
+  date_var = "from_date",
+  date_cutpoint = NULL,
+  drop_index = T,
+  test_schema = NULL
+) {
   
-  
-  # INITIAL ERROR CHECK ----
+  # INITIAL ERROR CHECKS ----
   # Check if the config provided is a local file or on a webpage
-  if (!is.null(config) & !is.null(config_url) & !is.null(config_file)) {
-    stop("Specify either alocal config object, config_url, or config_file but only one")
+  if (sum(!is.null(config), !is.null(config_url), !is.null(config_file)) > 1) {
+    stop("Specify either a local config object, config_url, or config_file but only one")
+  }
+  
+  if (!is.null(config_url)) {
+    message("Warning: YAML configs pulled from a URL are subject to fewer error checks")
   }
   
   # Check that the yaml config file exists in the right format
@@ -161,19 +124,25 @@ load_table_from_file <- function(conn,
       stop("Config file does not exist, check file name")
     }
     
-    if (configr::is.yaml.file(config_file) == F) {
-      stop(glue("Config file is not a YAML config file. ", 
-                "Check there are no duplicate variables listed"))
+    if (is.yaml.file(config_file) == F) {
+      stop(paste0("Config file is not a YAML config file. \n", 
+                  "Check there are no duplicate variables listed"))
     }
   }
   
-  # Check that something will be run (but not both things)
-  if (overall == F & ind_yr == F) {
-    stop("At least one of 'overall and 'ind_yr' must be set to TRUE")
+  if (truncate == T & truncate_date == T) {
+    message("Warning: truncate and truncate_date both set to TRUE. \n
+          Entire table will be truncated.")
   }
+ 
   
-  if (overall == T & ind_yr == T) {
-    stop("Only one of 'overall and 'ind_yr' can be set to TRUE")
+  # SET UP SERVER ----
+  if (is.null(server)) {
+    server <- NA
+  } else if (server %in% c("phclaims", "hhsaw")) {
+    server <- server
+  } else if (!server %in% c("phclaims", "hhsaw")) {
+    stop("Server must be NULL, 'phclaims', or 'hhsaw'")
   }
   
   
@@ -185,14 +154,32 @@ load_table_from_file <- function(conn,
   } else {
     table_config <- yaml::read_yaml(config_file)
   }
-
+  
   # Make sure a valid URL was found
   if ('404' %in% names(table_config)) {
     stop("Invalid URL for YAML file")
   }
   
   
-  # VARIABLES ----
+  # TABLE VARIABLES ----
+  ## from_schema ----
+  if (is.null(from_schema)) {
+    if (!is.null(table_config[[server]][["from_schema"]])) {
+      from_schema <- table_config[[server]][["from_schema"]]
+    } else if (!is.null(table_config$from_schema)) {
+      from_schema <- table_config$from_schema
+    }
+  }
+  
+  ## from_table ----
+  if (is.null(from_table)) {
+    if (!is.null(table_config[[server]][["from_table"]])) {
+      from_table <- table_config[[server]][["from_table"]]
+    } else if (!is.null(table_config$from_table)) {
+      from_table <- table_config$from_table
+    }
+  }
+  
   ## to_schema ----
   if (is.null(to_schema)) {
     if (!is.null(table_config[[server]][["to_schema"]])) {
@@ -211,359 +198,195 @@ load_table_from_file <- function(conn,
     }
   }
   
-  
-  ## server_path ----
-  if (is.null(server_path)) {
-    if (!is.null(table_config[[server]][["server_path"]])) {
-      server_path <- table_config[[server]][["server_path"]]
-    } else if (!is.null(table_config$server_path)) {
-      server_path <- table_config$server_path
+  ## archive_schema ----
+  if (is.null(archive_schema)) {
+    if (!is.null(table_config[[server]][["archive_schema"]])) {
+      archive_schema <- table_config[[server]][["archive_schema"]]
+    } else if (!is.null(table_config$archive_schema)) {
+      archive_schema <- table_config$archive_schema
     }
   }
   
-  ## db_name ----
-  if (is.null(db_name)) {
-    if (!is.null(table_config[[server]][["db_name"]])) {
-      db_name <- table_config[[server]][["db_name"]]
-    } else if (!is.null(table_config$db_name)) {
-      db_name <- table_config$db_name
+  ## archive_table ----
+  if (is.null(archive_table)) {
+    if (!is.null(table_config[[server]][["archive_table"]])) {
+      archive_table <- table_config[[server]][["archive_table"]]
+    } else if (!is.null(table_config$archive_table)) {
+      archive_table <- table_config$archive_table
     }
   }
-
-
-  if (ind_yr == T & combine_yr == T) {
-    # Use unique in case variables are repeated
-    #combine_years <- as.list(sort(unique(table_config$combine_years)))
-    combine_years <- as.list(sort(unique(table_config$years)))
+  
+  
+  # ADDITIONAL ERROR CHECKS ----
+  if (truncate_date == T & (is.null(archive_schema) | is.null(archive_table))) {
+    stop("archive_schema and archive_table required when truncate_date = T")
   }
   
   
   # TEST MODE ----
-  # Alert users they are in test mode
   if (!is.null(test_schema)) {
     message("FUNCTION WILL BE RUN IN TEST MODE, WRITING TO ", toupper(test_schema), " SCHEMA")
-    test_msg <- " (function is in test mode, only 1,000 rows will be loaded)"
-    to_table <- glue::glue("{to_schema}_{to_table}")
+    test_msg <- " (function is in test mode, only 5,000 rows will be loaded)"
+    # Overwrite existing values (order matters here)
+    to_table <- glue("{to_schema}_{to_table}")
     to_schema <- test_schema
-    load_rows <- " -L 1001 "
+    archive_schema <- test_schema
+    archive_table <- glue("archive_{to_table}")
+    load_rows <- " TOP (5000) " # Using 5,000 to better test data from multiple years
+    if (!is.null(archive_schema)) {
+      archive_rows <- " TOP (4000) " # When unioning tables in test mode, ensure a mix from both
+      new_rows <- " TOP (1000) " # When unioning tables in test mode, ensure a mix from both
+    } else {
+      archive_rows <- ""
+      new_rows <- " TOP (5000) " # When unioning tables in test mode, ensure a mix from both
+    }
   } else {
     test_msg <- ""
     load_rows <- ""
+    archive_rows <- ""
+    new_rows <- ""
   }
   
   
-  # SET UP A FUNCTION FOR COMMON ACTIONS ----
-  # Both the overall load and year-specific loads use a similar set of code
-  loading_process <- function(conn_inner = conn,
-                              to_schema_inner = to_schema,
-                              to_table_inner = to_table,
-                              server_path_inner = server_path,
-                              db_name_inner = db_name,
-                              file_path_inner = file_path,
-                              field_term_inner = field_term,
-                              row_term_inner = row_term,
-                              first_row_inner = first_row,
-                              load_rows_inner = load_rows,
-                              truncate_inner = truncate,
-                              drop_index_inner = drop_index,
-                              test_msg_inner = test_msg) {
+  # DATE TRUNCATION ----
+  if (truncate_date == T) {
     
-    # Add message to user
-    message(glue('Loading [{to_schema_inner}].[{to_table_inner}] table(s) ',
-                 ' from {file_path_inner} {test_msg_inner}'))
-    
-    ## Truncate existing table if desired ----
-    if (truncate_inner == T) {
-      DBI::dbExecute(conn_inner, 
-                     glue::glue_sql("TRUNCATE TABLE {`to_schema_inner`}.{`to_table_inner`}", 
-                                    .con = conn_inner))
-    }
-    
-    ## Remove existing index if desired (and an index exists) ----
-    if (drop_index_inner == T) {
-      # This code pulls out the index name
-      existing_index <- DBI::dbGetQuery(conn_inner, 
-                                        glue::glue_sql("SELECT DISTINCT a.index_name
-                     FROM
-                     (SELECT ind.name AS index_name
-                       FROM
-                       (SELECT object_id, name, type_desc FROM sys.indexes
-                         WHERE type_desc LIKE 'CLUSTERED%') ind
-                       INNER JOIN
-                       (SELECT name, schema_id, object_id FROM sys.tables
-                         WHERE name = {to_table_inner}) t
-                       ON ind.object_id = t.object_id
-                       INNER JOIN
-                       (SELECT name, schema_id FROM sys.schemas
-                         WHERE name = {to_schema_inner}) s
-                       ON t.schema_id = s.schema_id) a", 
-                                                       .con = conn_inner))
-      
-      if (nrow(existing_index) != 0) {
-        lapply(seq_along(existing_index), function(i) {
-          DBI::dbExecute(conn_inner,
-                         glue::glue_sql("DROP INDEX {`existing_index[['index_name']][[i]]`} 
-                                        ON {`to_schema_inner`}.{`to_table_inner`}", 
-                                        .con = conn_inner))
-        })
+    if (is.null(date_var)) {
+      if (!is.null(table_config[[server]][["date_var"]])) {
+        date_var <- table_config[[server]][["date_var"]]
+      } else if (!is.null(table_config$date_var)) {
+        date_var <- table_config$date_var
+      } else {
+        stop("No date_var variable specified. This is needed when truncate_date = TRUE")
       }
     }
     
-    ## Pull out parameters for BCP load ----
-    if (!is.null(field_term_inner)) {
-      field_term <- paste0("-t ", field_term_inner)
+    if (auto_date == T) {
+      if (!is.null(date_cutpoint)) {
+        warning("auto_date = T and date_cutpoint provided, using auto_date")
+      }
+      # Find the most recent date in the new data
+      date_cutpoint <- dbGetQuery(conn, glue::glue_sql("SELECT MAX({`date_var`})
+                                 FROM {`from_schema`}.{`from_table`}",
+                                                  .con = conn))
     } else {
-      field_term <- ""
-    }
-    
-    if (!is.null(row_term_inner)) {
-      row_term <- paste0("-r ", row_term_inner)
-    } else {
-      row_term <- ""
-    }
-    
-    
-    
-    ## Set up BCP arguments and run BCP ----
-    bcp_args <- c(glue(' {to_schema_inner}.{to_table_inner} IN ', 
-                       ' "{file_path_inner}" -d {db_name_inner} ',
-                       ' {field_term} {row_term} -C 65001 -F {first_row_inner} ',
-                       ' -S {server_path_inner} -T -b 100000 {load_rows_inner} -c '))
-    
-    print(bcp_args)
-    system2(command = "bcp", args = c(bcp_args))
-  }
-  
-  
-  # OVERALL TABLE ----
-  if (overall == T) {
-    ## Pull out table-specific variables ----
-    ### file_path ----
-    if (is.null(file_path)) {
-      if (!is.null(server)) {
-        file_path <- table_config[[server]][["file_path"]]
-      } else if (!is.null(table_config$file_path)) {
-        file_path <- table_config$file_path
-      }
-    }
-    
-    ### field_term ----
-    if (is.null(field_term)) {
-      if (!is.null(table_config[[server]][["field_term"]])) {
-        field_term <- table_config[[server]][["field_term"]]
-      } else if (!is.null(table_config$field_term)) {
-        field_term <- table_config$field_term
-      }
-    }
-    
-    ### row_term ----
-    if (is.null(row_term)) {
-      if (!is.null(table_config[[server]][["row_term"]])) {
-        row_term <- table_config[[server]][["row_term"]]
-      } else if (!is.null(table_config$row_term)) {
-        row_term <- table_config$row_term
-      }
-    }
-    
-    ### first_row ----
-    # Order is a bit different because a default is provided
-    if (!is.null(table_config[[server]][["first_row"]])) {
-      first_row <- table_config[[server]][["first_row"]]
-    } else if (!is.null(table_config$first_row)) {
-      first_row <- table_config$first_row
-    }
-    
-    
-    ## Run loading function, can use defaults for everything ----
-    loading_process()
-  }
-  
-  
-  # CALENDAR YEAR TABLES ----
-  ### NB Need to redo this section to work with servers
-  # Not currently an issue since partial loads don't use the individual years piece
-  
-  if (ind_yr == T) {
-    # Use unique in case years are repeated
-    if (!is.null(years)) {
-      years <- sort(unique(years))
-    } else {
-      years <- sort(unique(table_config$years))
-    }
-    
-    message(glue::glue("Loading calendar year [{to_schema}].[{to_table}] tables", test_msg))
-    
-    lapply(years, function(x) {
-      ## Pull out table-specific variables ----
-      ### to_table ----
-      to_table <- paste0(to_table, "_", x)
-      
-      ### file_path ----
-      if (!is.null(file_path)) {
-        file_path <- file_path[[x]]
-      } else if ("file_path" %in% names(table_config[[x]])) {
-        file_path <- table_config[[x]][["file_path"]]
-      } else {
-        warning("No file name supplied for CY ", x, ". 
-                Specify in function arguments or the YAML file (see examples in ?load_table_from_file).")
-      }
-      
-      ### field_term ----
-      if (x %in% names(field_term)) {
-        field_term <- field_term[[x]]
-      } else if ("overall" %in% names(field_term)) {
-        field_term <- field_term[["overall"]]
-      } else if (!is.null(table_config[[x]][["field_term"]])) {
-        field_term <- table_config[[x]][["field_term"]]
-      } else if (!is.null(table_config$field_term)) {
-        field_term <- table_config$field_term
-      } else {
-        field_term <- NULL
-      }
-      
-      ### row_term ----
-      if (x %in% names(row_term)) {
-        row_term <- row_term[[x]]
-      } else if ("overall" %in% names(row_term)) {
-        row_term <- row_term[["overall"]]
-      } else if (!is.null(table_config[[x]][["row_term"]])) {
-        row_term <- table_config[[x]][["row_term"]]
-      } else if (!is.null(table_config$row_term)) {
-        row_term <- table_config$row_term
-      } else {
-        row_term <- NULL
-      }
-      
-      ### first_row ----
-      # Order is a bit different because a default is provided
-      if (!is.null(table_config[[x]][["first_row"]])) {
-        first_row <- table_config[[x]][["first_row"]]
-      } else if (!is.null(table_config$first_row)) {
-        first_row <- table_config$first_row
-      }
-      
-      
-      ## Run loading function, can use defaults for everything ----
-      loading_process()
-    })
-  }
-  
-  
-  # COMBINE INDIVIDUAL YEARS ----
-  if (combine_yr == T) {
-    message("Combining years into a single table")
-    if (truncate == T) {
-      # Remove data from existing combined table if desired
-      dbGetQuery(conn, glue::glue_sql("TRUNCATE TABLE {`to_schema`}.{`table_name`}", 
-                                      .con = conn))
-    }
-    
-    if (add_index == T) {
-      # Remove index from combined table if it exists
-      # This code pulls out the clustered index name
-      index_name <- dbGetQuery(conn, 
-                               glue::glue_sql("SELECT DISTINCT a.index_name
-                                                FROM
-                                                (SELECT ind.name AS index_name
-                                                  FROM
-                                                  (SELECT object_id, name, type_desc FROM sys.indexes
-                                                    WHERE type_desc LIKE 'CLUSTERED%') ind
-                                                  INNER JOIN
-                                                  (SELECT name, schema_id, object_id FROM sys.tables
-                                                    WHERE name = {`table`}) t
-                                                  ON ind.object_id = t.object_id
-                                                  INNER JOIN
-                                                  (SELECT name, schema_id FROM sys.schemas
-                                                    WHERE name = {`schema`}) s
-                                                  ON t.schema_id = s.schema_id) a",
-                                              .con = conn,
-                                              table = dbQuoteString(conn, table_name),
-                                              schema = dbQuoteString(conn, to_schema)))[[1]]
-      
-      if (length(index_name) != 0) {
-        dbGetQuery(conn_inner,
-                   glue::glue_sql("DROP INDEX {`index_name`} ON 
-                                  {`to_schema`}.{`table_name`}", .con = conn))
-      }
-    }
-    
-    
-    # Need to find all the columns that only exist in some years
-    # First find common variables
-    # Set up to work with old and new YAML config styles
-    if (!is.null(names(table_config$vars))) {
-      all_vars <- unlist(names(table_config$vars))
-    } else {
-      all_vars <- unlist(table_config$vars)  
-    }
-    
-    # Now find year-specific ones and add to main list
-    lapply(combine_years, function(x) {
-      table_name_new <- paste0("table_", x)
-      add_vars_name <- paste0("vars_", x)
-      
-      if (!is.null(names(table_config$vars))) {
-        all_vars <<- c(all_vars, unlist(names(table_config[[table_name_new]][[add_vars_name]])))
-      } else {
-        all_vars <<- c(all_vars, unlist(table_config[[table_name_new]][[add_vars_name]]))
-      }
-    })
-    # Make sure there are no duplicate variables
-    all_vars <- unique(all_vars)
-    
-    
-    # Set up SQL code to load columns
-    sql_combine <- glue::glue_sql("INSERT INTO {`to_schema`}.{`table_name`} WITH (TABLOCK) 
-                                    ({`vars`*}) 
-                                    SELECT {`vars`*} FROM (", 
-                                  .con = conn,
-                                  vars = all_vars)
-    
-    # For each year check which of the additional columns are present
-    lapply(seq_along(combine_years), function(x) {
-      table_name_new <- paste0(table_name, "_", combine_years[x])
-      config_name_new <- paste0("table_", combine_years[x])
-      add_vars_name <- paste0("vars_", combine_years[x])
-      if (!is.null(names(table_config$vars))) {
-        year_vars <- c(unlist(names(table_config$vars)), 
-                       unlist(names(table_config[[config_name_new]][[add_vars_name]])))
-      } else {
-        year_vars <- c(unlist(table_config$vars), unlist(table_config[[config_name_new]][[add_vars_name]]))
-      }
-      
-      matched_vars <- match(all_vars, year_vars)
-      
-      vars_to_load <- unlist(lapply(seq_along(matched_vars), function(y) {
-        if (is.na(matched_vars[y])) {
-          var_x <- paste0("NULL AS ", all_vars[y])
+      if (is.null(date_cutpoint)) {
+        if (!is.null(table_config[[server]][["date_cutpoint"]])) {
+          date_cutpoint <- table_config[[server]][["date_cutpoint"]]
+        } else if (!is.null(table_config$date_cutpoint)) {
+          date_cutpoint <- table_config$date_cutpoint
         } else {
-          var_x <- all_vars[y]
+          stop("No date_cutpoint variable specified. This is needed when truncate_date = TRUE and auto_date = FALSE")
         }
-      }))
-      
-      # Add to main SQL statement
-      if (x < length(combine_years)) {
-        sql_combine <<- glue::glue_sql("{`sql_combine`} SELECT {`vars_to_load`*}
-                                         FROM {`to_schema`}.{`table`} UNION ALL ",
-                                       .con = conn,
-                                       table = table_name_new)
-      } else {
-        sql_combine <<- glue::glue_sql("{`sql_combine`} SELECT {`vars_to_load`*}
-                                         FROM {`to_schema`}.{`table`}) AS tmp",
-                                       .con = conn,
-                                       table = table_name_new)
       }
-      
-    })
+    }
     
-    dbGetQuery(conn, sql_combine)
-    
-    if (add_index == T) {
-      if (!exists("add_index_f")) {
-        devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/claims_data/master/claims_db/db_loader/scripts_general/add_index.R")
-      }
-      message("Adding index")
-      add_index_f(conn = conn, table_config = table_config, test_mode = test_mode)
+    message(glue("Date to truncate from: {date_cutpoint}"))
+  }
+  
+  
+  # DEAL WITH EXISTING TABLE ----
+  # Make sure temp table exists if needed
+  if (test_mode == T) {
+    if (dbExistsTable(conn, DBI::Id(schema = to_schema, table = to_table)) == F) {
+      stop("The temporary to_table (", to_schema, ".", to_table, ") does not exist. Create table and run again.")
     }
   }
+  
+  ## Truncate existing table if desired ----
+  if (truncate == T) {
+    dbGetQuery(conn, glue::glue_sql("TRUNCATE TABLE {`to_schema`}.{`to_table`}", .con = conn))
+  }
+  
+  # 'Truncate' from a given date if desired (really move existing data to archive then copy back)
+  if (truncate == F & truncate_date == T) {
+    # Check if the archive table exists and move table over. If not, show message.
+    if (dbExistsTable(conn, DBI::Id(schema = archive_schema, table = archive_table))) {
+      message("Truncating existing archive table")
+      dbGetQuery(conn, glue::glue_sql("TRUNCATE TABLE {`archive_schema`}.{`archive_table`}", .con = conn))
+    } else {
+      stop(archive_schema, ".", archive_table, " does not exist, please create it")
+    }
+    
+    # Use real to_schema and to_table here to obtain actual data
+    sql_archive <- glue::glue_sql("INSERT INTO {`archive_schema`}.{`archive_table`} WITH (TABLOCK) 
+                                SELECT {`archive_rows`} * FROM {`to_schema`}.{`to_table`}", 
+                                  .con = conn,
+                                  archive_rows = DBI::SQL(archive_rows))
+    
+    message("Archiving existing table")
+    dbGetQuery(conn, sql_archive)
+    
+    
+    # Check that the full number of rows are in the archive table
+    if (test_mode == F) {
+      archive_row_cnt <- as.numeric(odbc::dbGetQuery(
+        db_claims, glue::glue_sql("SELECT COUNT (*) FROM {`archive_schema`}.{`archive_table`}", .con = conn)))
+      stage_row_cnt <- as.numeric(odbc::dbGetQuery(
+        db_claims, glue::glue_sql("SELECT COUNT (*) FROM {`to_schema`}.{`to_table`}", .con = conn)))
+      
+      if (archive_row_cnt != stage_row_cnt) {
+        stop("The number of rows differ between ", archive_schema, " and ", to_schema, " schemas")
+      }
+    }
+    
+    # Now truncate destination table
+    dbGetQuery(conn, glue::glue_sql("TRUNCATE TABLE {`to_schema`}.{`to_table`}", .con = conn))
+  }
+  
+  
+  ## Remove existing clustered index if desired ----
+  if (drop_index == T) {
+    # This code pulls out the clustered index name
+    index_sql <- glue::glue_sql("SELECT DISTINCT a.index_name
+                                  FROM
+                                  (SELECT ind.name AS index_name
+                                  FROM
+                                  (SELECT object_id, name, type_desc FROM sys.indexes
+                                  WHERE type_desc LIKE 'CLUSTERED%') ind
+                                  INNER JOIN
+                                  (SELECT name, schema_id, object_id FROM sys.tables
+                                  WHERE name = {`table`}) t
+                                  ON ind.object_id = t.object_id
+                                  INNER JOIN
+                                  (SELECT name, schema_id FROM sys.schemas
+                                  WHERE name = {`schema`}) s
+                                  ON t.schema_id = s.schema_id
+                                  ) a", .con = conn,
+                                table = dbQuoteString(conn, to_table),
+                                schema = dbQuoteString(conn, to_schema))
+    
+    
+    index_name <- dbGetQuery(conn, index_sql)[[1]]
+    
+    if (length(index_name) != 0) {
+      dbGetQuery(conn,
+                 glue::glue_sql("DROP INDEX {`index_name`} ON {`to_schema`}.{`to_table`}", .con = conn))
+    }
+  }
+  
+  
+  # LOAD DATA TO TABLE ----
+  # Add message to user
+  message(glue("Loading to [{to_schema}].[{to_table}] from [{from_schema}].[{from_table}] table ", test_msg))
+  
+  # Run INSERT statement
+  if (truncate_date == F) {
+    sql_combine <- glue::glue_sql("INSERT INTO {`to_schema`}.{`to_table`} WITH (TABLOCK) 
+                                SELECT {load_rows} * FROM {`from_schema`}.{`from_table`}", 
+                                  .con = conn,
+                                  load_rows = DBI::SQL(load_rows))
+  } else if (truncate_date == T) {
+    sql_combine <- glue::glue_sql(
+      "INSERT INTO {`to_schema`}.{`to_table`} WITH (TABLOCK)
+        SELECT {`archive_rows`} * FROM {`archive_schema`}.{`archive_table`}
+          WHERE {`date_var`} < {date_cutpoint}  
+        UNION 
+        SELECT {load_rows} * FROM {`from_schema`}.{`from_table`}
+        WHERE {`date_var`} >= {date_cutpoint}",
+      .con = conn,
+      archive_rows = DBI::SQL(archive_rows),
+      load_rows = DBI::SQL(load_rows))
+  }
+  dbGetQuery(conn, sql_combine)
 }
