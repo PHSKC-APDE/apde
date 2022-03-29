@@ -289,7 +289,7 @@ apde_notify_menu_f <- function() {
         actionButton(inputId = "msg_save_btn", label = "Save Message")
       ),
       column(8, 
-        multiInput(inputId = "multi_list", label = "Email List:",
+        multiInput(inputId = "multi_list", label = "Email List",
                    width = 600, choices = as.list(address_list$address)),
         actionButton(inputId = "list_save_btn", label = "Save Email List"),
         hr(),
