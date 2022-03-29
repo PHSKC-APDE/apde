@@ -230,9 +230,7 @@ apde_notify_list_set_f <- function(msg_id = NULL,
 
 apde_notify_f <- function(msg_id = NULL,
                           msg_name = NULL,
-                          vars) 
-  {
-  
+                          vars) {
   emailReady <- tryCatch(
     { length(creds_key("outlook")) },
     error = function(x) { return(0) })
