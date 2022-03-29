@@ -11,6 +11,20 @@ suppressWarnings(require(shinyWidgets)) #UI Widgets
 
 devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/apde/main/R/create_db_connection.R")
 
+apde_notify_set_cred_f <- function() {
+  ## CREATING THE OUTLOOK CREDENTIAL
+  ## ENTER EMAIL ADDRESS
+  email <- dlgInput("Enter Email address:", paste0(Sys.info()["user"], "@kingcounty.gov"))$res
+  ## ENTERE YOUR PW IN POP UP
+  create_smtp_creds_key(
+    id = "outlook",
+    user = email,
+    provider = "outlook",
+    overwrite = TRUE,
+    use_ssl = TRUE
+  )
+}
+
 apde_notify_msgs_get_f <- function() {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   msgs <- DBI::dbGetQuery(conn, 
@@ -236,17 +250,7 @@ apde_notify_f <- function(msg_id = NULL,
     error = function(x) { return(0) })
   
   if(emailReady == 0) {
-    ## CREATING THE OUTLOOK CREDENTIAL
-    ## ENTER EMAIL ADDRESS
-    email <- dlgInput("Enter Email address:", paste0(Sys.info()["user"], "@kingcounty.gov"))$res
-    ## ENTERE YOUR PW IN POP UP
-    create_smtp_creds_key(
-      id = "outlook",
-      user = email,
-      provider = "outlook",
-      overwrite = TRUE,
-      use_ssl = TRUE
-    )
+    apde_notify_set_cred_f()
   }
   
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
