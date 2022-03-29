@@ -272,7 +272,7 @@ apde_notify_f <- function(msg_id = NULL,
     )
 }
 
-apde_notify_menu_f() <- function() {
+apde_notify_menu_f <- function() {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   address_list <- apde_notify_addresses_get_f()
   current_list <- NA
