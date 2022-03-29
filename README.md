@@ -16,6 +16,8 @@ This fuction is used to send custom emails to an email list inside an R script.
 - shinyWidgets
 ## Required R Code Before Use
 devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/apde/main/R/notify.R")
+## Other Requirements
+Access to HHSAW Production SQL Server
 ## Functions
 
 ### apde_notify_set_cred_f()
