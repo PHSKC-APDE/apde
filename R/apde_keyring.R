@@ -37,4 +37,7 @@ apde_keyring_check_f <- function(keyring){
   }
 }
 
-apde_keyring_set_f("hhsaw")
+### Create 'hhsaw' key only if needed
+if("hhsaw" %in% keyring::key_list()$service == FALSE){
+  apde_keyring_set_f("hhsaw")
+}
