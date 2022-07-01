@@ -1,7 +1,7 @@
 Package: apde
 Type: Package
 Title: Common functions used in APDE's work
-Version: 0.3.1
+Version: 0.3.2
 Author@R: c(
   person("Alastair", "Matheson", email = "alastair.matheson@kingcounty.gov", role = c("aut", "cre")))
 Author: Alastair Matheson [aut, cre]
