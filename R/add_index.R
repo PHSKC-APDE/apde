@@ -225,7 +225,7 @@ add_index <- function(conn,
     # Clustered index
     DBI::dbExecute(conn,
                    glue::glue_sql("CREATE CLUSTERED INDEX {`index_name`} ON 
-                   {`to_schema`}.{`to_table`}({`table_config$index_vars`*})",
+                   {`to_schema`}.{`to_table`}({`index_vars`*})",
                                   .con = conn))
   }
   
