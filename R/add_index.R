@@ -115,7 +115,7 @@ add_index <- function(conn,
   if ('404' %in% names(table_config)) {
     stop("Invalid URL for YAML file")
   }
-
+  
   
   # VARIABLES ----
   ## to_schema ----
@@ -218,15 +218,15 @@ add_index <- function(conn,
   if (index_type == 'ccs') {
     # Clustered column store index
     DBI::dbExecute(conn,
-    glue::glue_sql("CREATE CLUSTERED COLUMNSTORE INDEX {`index_name`} ON 
+                   glue::glue_sql("CREATE CLUSTERED COLUMNSTORE INDEX {`index_name`} ON 
                    {`to_schema`}.{`to_table`}",
-                   .con = conn))
+                                  .con = conn))
   } else {
     # Clustered index
     DBI::dbExecute(conn,
-    glue::glue_sql("CREATE CLUSTERED INDEX {`index_name`} ON 
+                   glue::glue_sql("CREATE CLUSTERED INDEX {`index_name`} ON 
                    {`to_schema`}.{`to_table`}({`table_config$index_vars`*})",
-                   .con = conn))
+                                  .con = conn))
   }
   
 }

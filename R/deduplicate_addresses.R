@@ -21,10 +21,12 @@ deduplicate_addresses <- function(conn_hhsaw = NULL,
                                   conn_phclaims = NULL) {
   
   # Set up functions to avoid duplicating code ----
-  sql_loader <- function(df, conn = NULL, to_schema = "ref", to_table = NULL) {
+  sql_loader <- function(df, conn = NULL, to_schema = "ref", to_table = NULL, overwrite = T) {
     start <- 1L
     max_rows <- 50000L
     cycles <- ceiling(nrow(df)/max_rows)
+    
+    initial_append <- ifelse(overwrite == TRUE, FALSE, TRUE)
     
     lapply(seq(start, cycles), function(i) {
       start_row <- ifelse(i == 1, 1L, max_rows * (i-1) + 1)
@@ -35,7 +37,7 @@ deduplicate_addresses <- function(conn_hhsaw = NULL,
         DBI::dbWriteTable(conn,
                      name = DBI::Id(schema = to_schema,  table = to_table),
                      value = as.data.frame(df[start_row:end_row, ]),
-                     overwrite = T, append = F)
+                     overwrite = overwrite, append = initial_append)
       } else {
         DBI::dbWriteTable(conn,
                      name = DBI::Id(schema = to_schema,  table = to_table),
@@ -53,7 +55,7 @@ deduplicate_addresses <- function(conn_hhsaw = NULL,
     
     # Bring in data
     message("Bringing in data from ", to_schema, ".", to_table)
-    adds <- setDT(DBI::dbGetQuery(conn, 
+    adds <- data.table::setDT(DBI::dbGetQuery(conn, 
                                   glue::glue_sql("select * from {`to_schema`}.{`to_table`}",
                                                  .con = conn)))
     
@@ -82,7 +84,7 @@ deduplicate_addresses <- function(conn_hhsaw = NULL,
     # Load data back to SQL
     if (adds_dups > 1) {
       adds[, row_cnt := NULL] # Remove column used to find duplicates
-      sql_loader(df = adds, conn = conn, to_schema = to_schema, to_table = to_table)
+      sql_loader(df = adds, conn = conn, to_schema = to_schema, to_table = to_table, overwrite = T)
     }
     
     # Return the data frame to use it in synchronizing across servers
@@ -106,10 +108,9 @@ deduplicate_addresses <- function(conn_hhsaw = NULL,
     if (nrow(update_hhsaw) > 0) {
       message(nrow(update_hhsaw), " address rows to be loaded from PHClaims to HHSAW")
       print(str(update_hhsaw))
-      DBI::dbWriteTable(conn_hhsaw, 
-                        name = DBI::Id(schema = to_schema_hhsaw, table = to_table_hhsaw),
-                        value = update_hhsaw,
-                        append = T)
+      sql_loader(df = update_hhsaw, conn = conn_hhsaw, 
+                 to_schema = to_schema_hhsaw, to_table = to_table_hhsaw,
+                 overwrite = F)
     } else {
       message("No rows to add to HHSAW table")
     }
@@ -117,10 +118,9 @@ deduplicate_addresses <- function(conn_hhsaw = NULL,
     if (nrow(update_phclaims) > 0) {
       message(nrow(update_phclaims), " address rows to be loaded from HHSAW to PHClaims")
       print(str(update_phclaims))
-      DBI::dbWriteTable(conn_phclaims, 
-                        name = DBI::Id(schema = to_schema_phclaims, table = to_table_phclaims),
-                        value = update_phclaims,
-                        append = T)
+      sql_loader(df = update_phclaims, conn = conn_phclaims, 
+                 to_schema = to_schema_phclaims, to_table = to_table_phclaims,
+                 overwrite = F)
     } else {
       message("No rows to add to PHClaims table")
     }

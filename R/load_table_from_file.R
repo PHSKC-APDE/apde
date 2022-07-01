@@ -11,6 +11,7 @@
 #' specified > argument under server in YAML > argument not under server in YAML. 
 #' Note that arguments that should not vary between servers (e.g., row_terminator) 
 #' should not be listed under a server in the YAML file.
+#' Note: This function does not work to load to an Azure SQL DB (as of May 2022)
 #' 
 #' ## Example YAML file with no server or individual years
 #' (Assume the indentation is appropriate)
@@ -88,6 +89,10 @@
 #' @param to_table Name of the table that data will be loaded to (if not using YAML input).
 #' @param server_path Name of the SQL server to connect to (if not using YAML input).
 #' @param db_name Name of the database to use (if not using YAML input).
+#' @param azure Flag to indicate data are being loaded to an Azure SQL server. Default is FALSE.
+#' Does not currently do anything because BCP doesn't work with our Azure environment right now.
+#' @param azure_uid Username for connecting to Azure Active Directory. Only use if azure = T.
+#' @param azure_pwd Password for connecting to Azure Active Directory. Only use if azure = T.
 #' @param file_path File path of data to be loaded (if not using YAML input). If 
 #' ind_yr = T, this should be a named vector with the format 
 #' *c("2014" = "//path1/folder1/file1.ext", "2015" = "//path1/folder1/file2.ext")* 
@@ -139,6 +144,9 @@ load_table_from_file <- function(conn,
                                  to_table = NULL,
                                  server_path = NULL,
                                  db_name = NULL,
+                                 azure = F,
+                                 azure_uid = NULL,
+                                 azure_pwd = NULL,
                                  file_path = NULL,
                                  field_term = NULL,
                                  row_term = NULL,
@@ -182,13 +190,15 @@ load_table_from_file <- function(conn,
     table_config <- config
   } else if (!is.null(config_url)) {
     table_config <- yaml::yaml.load(httr::GET(config_url))
-  } else {
+  } else if (!is.null(config_file)) {
     table_config <- yaml::read_yaml(config_file)
   }
 
   # Make sure a valid URL was found
-  if ('404' %in% names(table_config)) {
-    stop("Invalid URL for YAML file")
+  if (exists("table_config")) {
+    if ('404' %in% names(table_config)) {
+      stop("Invalid URL for YAML file")
+    }  
   }
   
   
@@ -228,6 +238,19 @@ load_table_from_file <- function(conn,
       db_name <- table_config$db_name
     }
   }
+  
+  
+  ## Azure configuration ----
+  # As of May 2022 BSP doesn't seem to work in our environment so not using for now
+  # if (azure == T) {
+  #   azure_flag = " -G "
+  #   azure_uid_txt = paste0(" -U ", azure_uid)
+  #   azure_pwd_txt = paste0(" -P ", azure_pwd)
+  # } else {
+  #   azure_flag <- ""
+  #   azure_uid_txt = ""
+  #   azure_pwd_txt = ""
+  # }
 
 
   if (ind_yr == T & combine_yr == T) {
@@ -273,9 +296,9 @@ load_table_from_file <- function(conn,
     
     ## Truncate existing table if desired ----
     if (truncate_inner == T) {
-      DBI::dbExecute(conn_inner, 
+      try(DBI::dbExecute(conn_inner, 
                      glue::glue_sql("TRUNCATE TABLE {`to_schema_inner`}.{`to_table_inner`}", 
-                                    .con = conn_inner))
+                                    .con = conn_inner)), silent = T)
     }
     
     ## Remove existing index if desired (and an index exists) ----
@@ -326,6 +349,7 @@ load_table_from_file <- function(conn,
     bcp_args <- c(glue(' {to_schema_inner}.{to_table_inner} IN ', 
                        ' "{file_path_inner}" -d {db_name_inner} ',
                        ' {field_term} {row_term} -C 65001 -F {first_row_inner} ',
+                       #' {azure_flag} {azure_uid_txt} {azure_pwd_txt} ',
                        ' -S {server_path_inner} -T -b 100000 {load_rows_inner} -c '))
     
     print(bcp_args)
@@ -365,10 +389,12 @@ load_table_from_file <- function(conn,
     
     ### first_row ----
     # Order is a bit different because a default is provided
-    if (!is.null(table_config[[server]][["first_row"]])) {
-      first_row <- table_config[[server]][["first_row"]]
-    } else if (!is.null(table_config$first_row)) {
-      first_row <- table_config$first_row
+    if (exists("table_config")) {
+      if (!is.null(table_config[[server]][["first_row"]])) {
+        first_row <- table_config[[server]][["first_row"]]
+      } else if (!is.null(table_config$first_row)) {
+        first_row <- table_config$first_row
+      }
     }
     
     
@@ -466,8 +492,8 @@ load_table_from_file <- function(conn,
     message("Combining years into a single table")
     if (truncate == T) {
       # Remove data from existing combined table if desired
-      dbGetQuery(conn, glue::glue_sql("TRUNCATE TABLE {`to_schema`}.{`to_table`}", 
-                                      .con = conn))
+      try(dbGetQuery(conn, glue::glue_sql("TRUNCATE TABLE {`to_schema`}.{`to_table`}", 
+                                      .con = conn)))
     }
     
     if (drop_index == T) {
