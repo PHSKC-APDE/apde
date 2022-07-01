@@ -115,7 +115,7 @@ add_index <- function(conn,
   if ('404' %in% names(table_config)) {
     stop("Invalid URL for YAML file")
   }
-
+  
   
   # VARIABLES ----
   ## to_schema ----
@@ -183,7 +183,7 @@ add_index <- function(conn,
   # REMOVE EXISTING INDICES IF DESIRED ----
   if (drop_index == T) {
     # This code pulls out the index name
-    existing_index <- DBI::dbGetQuery(conn_inner, 
+    existing_index <- DBI::dbGetQuery(conn, 
                                       glue::glue_sql("SELECT DISTINCT a.index_name
                      FROM
                      (SELECT ind.name AS index_name
@@ -198,35 +198,35 @@ add_index <- function(conn,
                        (SELECT name, schema_id FROM sys.schemas
                          WHERE name = {to_schema}) s
                        ON t.schema_id = s.schema_id) a", 
-                                                     .con = conn_inner))
+                                                     .con = conn))
     
     if (nrow(existing_index) != 0) {
       message("Removing existing clustered/clustered columnstore index/indices")
       lapply(seq_along(existing_index), function(i) {
-        DBI::dbExecute(conn_inner,
+        DBI::dbExecute(conn,
                        glue::glue_sql("DROP INDEX {`existing_index[['index_name']][[i]]`} 
                                         ON {`to_schema`}.{`to_table`}", 
-                                      .con = conn_inner))
+                                      .con = conn))
       })
     }
   }
   
   
   # ADD INDEX ----
-  message(glue::glue("Adding index ({table_config$index_name}) to {to_schema}.{to_table}"))
+  message(glue::glue("Adding index ({index_name}) to {to_schema}.{to_table}"))
   
   if (index_type == 'ccs') {
     # Clustered column store index
     DBI::dbExecute(conn,
-    glue::glue_sql("CREATE CLUSTERED COLUMNSTORE INDEX {`table_config$index_name`} ON 
+                   glue::glue_sql("CREATE CLUSTERED COLUMNSTORE INDEX {`index_name`} ON 
                    {`to_schema`}.{`to_table`}",
-                   .con = conn))
+                                  .con = conn))
   } else {
     # Clustered index
     DBI::dbExecute(conn,
-    glue::glue_sql("CREATE CLUSTERED INDEX {`table_config$index_name`} ON 
+                   glue::glue_sql("CREATE CLUSTERED INDEX {`index_name`} ON 
                    {`to_schema`}.{`to_table`}({`table_config$index_vars`*})",
-                   .con = conn))
+                                  .con = conn))
   }
   
 }
