@@ -1,15 +1,29 @@
-suppressWarnings(library(odbc)) # Read to and write from SQL
-suppressWarnings(library(keyring)) # Access stored credentials
-suppressWarnings(library(glue)) # Safely combine code and variables
-suppressWarnings(library(blastula)) # Email functionality
-suppressWarnings(library(svDialogs)) # Create multi-select pop-ups
-suppressWarnings(library(tidyverse)) # Manipulate data
-suppressWarnings(library(dplyr)) # Manipulate data
-suppressWarnings(library(lubridate)) # Manipulate dates
-library(shiny)
-library(shinyWidgets)
+suppressWarnings(require(odbc)) # Read to and write from SQL
+suppressWarnings(require(keyring)) # Access stored credentials
+suppressWarnings(require(glue)) # Safely combine code and variables
+suppressWarnings(require(blastula)) # Email functionality
+suppressWarnings(require(svDialogs)) # Create multi-select pop-ups
+suppressWarnings(require(tidyverse)) # Manipulate data
+suppressWarnings(require(dplyr)) # Manipulate data
+suppressWarnings(require(lubridate)) # Manipulate dates
+suppressWarnings(require(shiny)) # UI
+suppressWarnings(require(shinyWidgets)) #UI Widgets
 
 devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/apde/main/R/create_db_connection.R")
+
+apde_notify_set_cred_f <- function() {
+  ## CREATING THE OUTLOOK CREDENTIAL
+  ## ENTER EMAIL ADDRESS
+  email <- dlgInput("Enter Email address:", paste0(Sys.info()["user"], "@kingcounty.gov"))$res
+  ## ENTERE YOUR PW IN POP UP
+  create_smtp_creds_key(
+    id = "outlook",
+    user = email,
+    provider = "outlook",
+    overwrite = TRUE,
+    use_ssl = TRUE
+  )
+}
 
 apde_notify_msgs_get_f <- function() {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
@@ -231,6 +245,14 @@ apde_notify_list_set_f <- function(msg_id = NULL,
 apde_notify_f <- function(msg_id = NULL,
                           msg_name = NULL,
                           vars) {
+  emailReady <- tryCatch(
+    { length(creds_key("outlook")) },
+    error = function(x) { return(0) })
+  
+  if(emailReady == 0) {
+    apde_notify_set_cred_f()
+  }
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   if(is.null(msg_id)) {
     msg_id <- apde_notify_msg_id_get_f(msg_name = msg_name)  
@@ -271,7 +293,7 @@ apde_notify_menu_f <- function() {
         actionButton(inputId = "msg_save_btn", label = "Save Message")
       ),
       column(8, 
-        multiInput(inputId = "multi_list", label = "Email List:",
+        multiInput(inputId = "multi_list", label = "Email List",
                    width = 600, choices = as.list(address_list$address)),
         actionButton(inputId = "list_save_btn", label = "Save Email List"),
         hr(),
