@@ -153,6 +153,7 @@ load_table_from_file <- function(conn,
                                  first_row = 2,
                                  truncate = T,
                                  drop_index = T,
+                                 tablock = F,
                                  test_schema = NULL) {
   
   
@@ -344,13 +345,19 @@ load_table_from_file <- function(conn,
       row_term <- ""
     }
     
+    if(tablock == T) {
+      h_tablock <- '-h"TABLOCK"'
+    } else {
+      h_tablock <- ''
+    }
     
     ## Set up BCP arguments and run BCP ----
     bcp_args <- c(glue(' {to_schema_inner}.{to_table_inner} IN ', 
                        ' "{file_path_inner}" -d {db_name_inner} ',
                        ' {field_term} {row_term} -C 65001 -F {first_row_inner} ',
                        #' {azure_flag} {azure_uid_txt} {azure_pwd_txt} ',
-                       ' -S {server_path_inner} -T -b 100000 {load_rows_inner} -c '))
+                       ' -S {server_path_inner} -T -b 100000 {load_rows_inner} -c',
+                       ' {h_tablock}'))
     
     print(bcp_args)
     system2(command = "bcp", args = c(bcp_args))
