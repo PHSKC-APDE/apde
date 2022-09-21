@@ -76,7 +76,7 @@ copy_into_f <- function(conn,
       stop("Config file does not exist, check file name")
     }
     
-    if (is.yaml.file(config_file) == F) {
+    if (configr::is.yaml.file(config_file) == F) {
       stop(glue::glue("Config file is not a YAML config file. ", 
                       "Check there are no duplicate variables listed"))
     }
