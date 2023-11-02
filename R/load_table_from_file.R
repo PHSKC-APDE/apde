@@ -88,9 +88,9 @@
 #' @param to_schema Name of the schema that data will be loaded to (if not using YAML input).
 #' @param to_table Name of the table that data will be loaded to (if not using YAML input).
 #' @param server_path Name of the SQL server to connect to (if not using YAML input).
+#' If using Azure, only seems to work if you specify an existing DSN connection.
 #' @param db_name Name of the database to use (if not using YAML input).
 #' @param azure Flag to indicate data are being loaded to an Azure SQL server. Default is FALSE.
-#' Does not currently do anything because BCP doesn't work with our Azure environment right now.
 #' @param azure_uid Username for connecting to Azure Active Directory. Only use if azure = T.
 #' @param azure_pwd Password for connecting to Azure Active Directory. Only use if azure = T.
 #' @param file_path File path of data to be loaded (if not using YAML input). If 
@@ -119,6 +119,8 @@
 #' {to_schema}_{to_table}. Schema must already exist in the database. Most useful 
 #' when the user has an existing YAML file and does not want to overwrite it. 
 #' Only 1,000 rows will be loaded to each table. Default is NULL.
+#' @param use_sys If the sys package is installed, use this to call BCP and see a more 
+#' informative interface in the R console. Helpful for debugging when BSP doesn't work. Default is FALSE.
 #'
 #' @examples
 #' \dontrun{
@@ -154,7 +156,8 @@ load_table_from_file <- function(conn,
                                  truncate = T,
                                  drop_index = T,
                                  tablock = F,
-                                 test_schema = NULL) {
+                                 test_schema = NULL,
+                                 use_sys = F) {
   
   
   # INITIAL ERROR CHECK ----
@@ -193,6 +196,9 @@ load_table_from_file <- function(conn,
     table_config <- yaml::yaml.load(httr::GET(config_url))
   } else if (!is.null(config_file)) {
     table_config <- yaml::read_yaml(config_file)
+  } else {
+    # Assume all values are provided
+    table_config <- NULL
   }
 
   # Make sure a valid URL was found
@@ -206,8 +212,12 @@ load_table_from_file <- function(conn,
   # VARIABLES ----
   ## to_schema ----
   if (is.null(to_schema)) {
-    if (!is.null(table_config[[server]][["to_schema"]])) {
-      to_schema <- table_config[[server]][["to_schema"]]
+    if (!is.null(server)) {
+      if (!is.null(table_config[[server]][["to_schema"]])) {
+        to_schema <- table_config[[server]][["to_schema"]]
+      } else if (!is.null(table_config$to_schema)) {
+        to_schema <- table_config$to_schema
+      }
     } else if (!is.null(table_config$to_schema)) {
       to_schema <- table_config$to_schema
     }
@@ -215,8 +225,12 @@ load_table_from_file <- function(conn,
   
   ## to_table ----
   if (is.null(to_table)) {
-    if (!is.null(table_config[[server]][["to_table"]])) {
-      to_table <- table_config[[server]][["to_table"]]
+    if (!is.null(server)) {
+      if (!is.null(table_config[[server]][["to_table"]])) {
+        to_table <- table_config[[server]][["to_table"]]
+      } else if (!is.null(table_config$to_table)) {
+        to_table <- table_config$to_table
+      }
     } else if (!is.null(table_config$to_table)) {
       to_table <- table_config$to_table
     }
@@ -224,8 +238,12 @@ load_table_from_file <- function(conn,
   
   ## server_path ----
   if (is.null(server_path)) {
-    if (!is.null(table_config[[server]][["server_path"]])) {
-      server_path <- table_config[[server]][["server_path"]]
+    if (!is.null(server)) {
+      if (!is.null(table_config[[server]][["server_path"]])) {
+        server_path <- table_config[[server]][["server_path"]]
+      } else if (!is.null(table_config$server_path)) {
+        server_path <- table_config$server_path
+      }
     } else if (!is.null(table_config$server_path)) {
       server_path <- table_config$server_path
     }
@@ -233,8 +251,12 @@ load_table_from_file <- function(conn,
   
   ## db_name ----
   if (is.null(db_name)) {
-    if (!is.null(table_config[[server]][["db_name"]])) {
-      db_name <- table_config[[server]][["db_name"]]
+    if (!is.null(server)) {
+      if (!is.null(table_config[[server]][["db_name"]])) {
+        db_name <- table_config[[server]][["db_name"]]
+      } else if (!is.null(table_config$db_name)) {
+        db_name <- table_config$db_name
+      }
     } else if (!is.null(table_config$db_name)) {
       db_name <- table_config$db_name
     }
@@ -242,16 +264,19 @@ load_table_from_file <- function(conn,
   
   
   ## Azure configuration ----
-  # As of May 2022 BSP doesn't seem to work in our environment so not using for now
-  # if (azure == T) {
-  #   azure_flag = " -G "
-  #   azure_uid_txt = paste0(" -U ", azure_uid)
-  #   azure_pwd_txt = paste0(" -P ", azure_pwd)
-  # } else {
-  #   azure_flag <- ""
-  #   azure_uid_txt = ""
-  #   azure_pwd_txt = ""
-  # }
+  if (azure == T) {
+    azure_flag = " -G "
+    azure_uid_txt = paste0(" -U ", azure_uid)
+    azure_pwd_txt = paste0(" -P ", azure_pwd)
+    identifiers = " -q "
+    integrated = ""
+  } else {
+    azure_flag <- ""
+    azure_uid_txt = ""
+    azure_pwd_txt = ""
+    identfiers = ""
+    integrated = " -T "
+  }
 
 
   if (ind_yr == T & combine_yr == T) {
@@ -352,15 +377,18 @@ load_table_from_file <- function(conn,
     }
     
     ## Set up BCP arguments and run BCP ----
-    bcp_args <- c(glue(' {to_schema_inner}.{to_table_inner} IN ', 
-                       ' "{file_path_inner}" -d {db_name_inner} ',
-                       ' {field_term} {row_term} -C 65001 -F {first_row_inner} ',
-                       #' {azure_flag} {azure_uid_txt} {azure_pwd_txt} ',
-                       ' -S {server_path_inner} -T -b 100000 {load_rows_inner} -c',
-                       ' {h_tablock}'))
+    bcp_args <- c(paste0(' ', to_schema_inner, '.', to_table_inner, ' IN ', ' "', file_path_inner, '" -d ', 
+                         db_name_inner, field_term, row_term, ' -C 65001 -F ', first_row_inner, 
+                         azure_flag, azure_uid_txt, azure_pwd_txt, identifiers, integrated, 
+                         ' -S ', server_path_inner, ' -D -b 100000 ', load_rows_inner, ' -c ', h_tablock))
     
     print(bcp_args)
-    system2(command = "bcp", args = c(bcp_args))
+    if (use_sys == F) {
+      system2(command = "bcp", args = c(bcp_args))
+    } else {
+      sys::exec_wait(cmd = r"(C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\Tools\Binn\bcp.exe)", args = I(bcp_args),
+                     std_out = T, std_err = T)
+    }
   }
   
   
@@ -369,17 +397,26 @@ load_table_from_file <- function(conn,
     ## Pull out table-specific variables ----
     ### file_path ----
     if (is.null(file_path)) {
-      if (!is.null(server) & !is.null(table_config[[server]][["file_path"]])) {
-        file_path <- table_config[[server]][["file_path"]]
+      if (!is.null(server)) {
+        if (!is.null(table_config[[server]][["file_path"]])) {
+          file_path <- table_config[[server]][["file_path"]]
+        } else if (!is.null(table_config$file_path)) {
+          file_path <- table_config$file_path
+        }
       } else if (!is.null(table_config$file_path)) {
         file_path <- table_config$file_path
       }
     }
     
+    
     ### field_term ----
     if (is.null(field_term)) {
-      if (!is.null(table_config[[server]][["field_term"]])) {
-        field_term <- table_config[[server]][["field_term"]]
+      if (!is.null(server)) {
+        if (!is.null(table_config[[server]][["field_term"]])) {
+          field_term <- table_config[[server]][["field_term"]]
+        } else if (!is.null(table_config$field_term)) {
+          field_term <- table_config$field_term
+        }
       } else if (!is.null(table_config$field_term)) {
         field_term <- table_config$field_term
       }
@@ -387,8 +424,12 @@ load_table_from_file <- function(conn,
     
     ### row_term ----
     if (is.null(row_term)) {
-      if (!is.null(table_config[[server]][["row_term"]])) {
-        row_term <- table_config[[server]][["row_term"]]
+      if (!is.null(server)) {
+        if (!is.null(table_config[[server]][["row_term"]])) {
+          row_term <- table_config[[server]][["row_term"]]
+        } else if (!is.null(table_config$row_term)) {
+          row_term <- table_config$row_term
+        }
       } else if (!is.null(table_config$row_term)) {
         row_term <- table_config$row_term
       }
@@ -396,12 +437,14 @@ load_table_from_file <- function(conn,
     
     ### first_row ----
     # Order is a bit different because a default is provided
-    if (exists("table_config")) {
+    if (!is.null(server)) {
       if (!is.null(table_config[[server]][["first_row"]])) {
         first_row <- table_config[[server]][["first_row"]]
       } else if (!is.null(table_config$first_row)) {
         first_row <- table_config$first_row
       }
+    } else if (!is.null(table_config$first_row)) {
+      first_row <- table_config$first_row
     }
     
     

@@ -184,8 +184,12 @@ create_table <- function(conn,
   # VARIABLES ----
   ## to_schema ----
   if (is.null(to_schema)) {
-    if (!is.null(table_config[[server]][["to_schema"]])) {
-      to_schema <- table_config[[server]][["to_schema"]]
+    if (!is.null(server)) {
+      if (!is.null(table_config[[server]][["to_schema"]])) {
+        to_schema <- table_config[[server]][["to_schema"]]
+      } else if (!is.null(table_config$to_schema)) {
+        to_schema <- table_config$to_schema
+      }
     } else if (!is.null(table_config$to_schema)) {
       to_schema <- table_config$to_schema
     }
@@ -193,8 +197,12 @@ create_table <- function(conn,
   
   ## to_table ----
   if (is.null(to_table)) {
-    if (!is.null(table_config[[server]][["to_table"]])) {
-      to_table <- table_config[[server]][["to_table"]]
+    if (!is.null(server)) {
+      if (!is.null(table_config[[server]][["to_table"]])) {
+        to_table <- table_config[[server]][["to_table"]]
+      } else if (!is.null(table_config$to_table)) {
+        to_table <- table_config$to_table
+      }
     } else if (!is.null(table_config$to_table)) {
       to_table <- table_config$to_table
     }
