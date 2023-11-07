@@ -359,19 +359,19 @@ load_table_from_file <- function(conn,
     
     ## Pull out parameters for BCP load ----
     if (!is.null(field_term_inner)) {
-      field_term <- paste0("-t ", field_term_inner)
+      field_term <- paste0(" -t ", field_term_inner)
     } else {
       field_term <- ""
     }
     
     if (!is.null(row_term_inner)) {
-      row_term <- paste0("-r ", row_term_inner)
+      row_term <- paste0(" -r ", row_term_inner)
     } else {
       row_term <- ""
     }
     
     if(tablock == T) {
-      h_tablock <- '-h"TABLOCK"'
+      h_tablock <- ' -h "TABLOCK" '
     } else {
       h_tablock <- ''
     }
