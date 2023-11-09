@@ -274,7 +274,7 @@ load_table_from_file <- function(conn,
     azure_flag <- ""
     azure_uid_txt = ""
     azure_pwd_txt = ""
-    identfiers = ""
+    identifiers = ""
     integrated = " -T "
   }
 
