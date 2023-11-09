@@ -270,12 +270,14 @@ load_table_from_file <- function(conn,
     azure_pwd_txt = paste0(" -P ", azure_pwd)
     identifiers = " -q "
     integrated = ""
+    use_desn = " -D "
   } else {
     azure_flag <- ""
     azure_uid_txt = ""
     azure_pwd_txt = ""
     identifiers = ""
     integrated = " -T "
+    use_dsn = ""
   }
 
 
@@ -380,7 +382,7 @@ load_table_from_file <- function(conn,
     bcp_args <- c(paste0(' ', to_schema_inner, '.', to_table_inner, ' IN ', ' "', file_path_inner, '" -d ', 
                          db_name_inner, field_term, row_term, ' -C 65001 -F ', first_row_inner, 
                          azure_flag, azure_uid_txt, azure_pwd_txt, identifiers, integrated, 
-                         ' -S ', server_path_inner, ' -D -b 100000 ', load_rows_inner, ' -c ', h_tablock))
+                         ' -S ', server_path_inner, ' ', use_dsn, ' -b 100000 ', load_rows_inner, ' -c ', h_tablock))
     
     print(bcp_args)
     if (use_sys == F) {
