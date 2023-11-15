@@ -270,7 +270,7 @@ load_table_from_file <- function(conn,
     azure_pwd_txt = paste0(" -P ", azure_pwd)
     identifiers = " -q "
     integrated = ""
-    use_desn = " -D "
+    use_dsn = " -D "
   } else {
     azure_flag <- ""
     azure_uid_txt = ""
