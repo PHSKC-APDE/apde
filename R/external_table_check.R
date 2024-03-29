@@ -78,7 +78,7 @@ external_table_check_f <- function(conn,
   # Compare all columns, column types, lengths, precision, etc.
   result <- dplyr::all_equal(source_cols, external_cols, ignore_col_order = F, ignore_row_order = F)
   
-  # If everything matches, end function
+  # If everything matches, end function and return TRUE
   if(result == TRUE) {
     message(glue("Source Table [{schema}].[{table}] Matches External Table [{schema_ext}].[{table_ext}]"))
     return(T)
@@ -109,5 +109,6 @@ WITH (DATA_SOURCE = [data_WS_EDW], SCHEMA_NAME = N{schema}, OBJECT_NAME = N{tabl
     }
   }
   
+  # If anything did not match, end function and return FALSE
   return(F)
 }
