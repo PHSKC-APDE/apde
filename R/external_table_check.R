@@ -13,14 +13,19 @@
 
 #### FUNCTION ####
 external_table_check_f <- function(conn,
+                                   db = c("inthealth_edw", "inthealth_dwhealth"),
                                    schema,
                                    table,
+                                   db_ext = "hhsaw",
                                    conn_ext,
                                    schema_ext,
                                    table_ext,
                                    sql_display = T,
                                    sql_file_path = NULL,
                                    overwrite = T) {
+  
+  # Variables
+  db <- match.arg(db)
   
   # Get source column information
   source_cols <- DBI::dbGetQuery(conn,
@@ -48,6 +53,10 @@ external_table_check_f <- function(conn,
                                                   AND [TABLE_SCHEMA] = {schema}
                                                 ORDER BY [ORDINAL_POSITION]",
                                                 .con = conn))
+  
+  if(nrow(source_cols) == 0) {
+    stop(glue("Error: The Source Table [{schema}].[{table}] Does NOT Exist!"))
+  }
   
   # Get current external column information (blank if none exisits)
   external_cols <- DBI::dbGetQuery(conn_ext,
@@ -84,11 +93,29 @@ external_table_check_f <- function(conn,
     return(T)
   }
   
+  
+  # Checks if external table exists and creates drop table script
+  if(nrow(external_cols) > 0) {
+    drop_table <- glue::glue_sql("
+IF OBJECT_ID('{`schema_ext`}.{`table_ext`}') IS NOT NULL
+DROP EXTERNAL TABLE {`schema_ext`}.{`table_ext`};", .con = conn_ext)
+  } else {
+    drop_table = ""
+  }
+  
+  # Sets datasource depending on source database
+  if(db == "intheath_edw") {
+    data_source <- "datasrc_WS_EDW"
+  } else {
+    data_source <- "datasrc_WS_IntHealth"
+  }
+  
   # Create SQL script
   sql <- glue::glue_sql("
+{drop_table}
 CREATE EXTERNAL TABLE {`schema_ext`}.{`table_ext`}
   ({DBI::SQL(glue_collapse(glue_sql('{DBI::SQL(source_cols$COLUMN_DEFINITION)}',.con = conn_ext), sep = ', \n  '))})
-WITH (DATA_SOURCE = [data_WS_EDW], SCHEMA_NAME = N{schema}, OBJECT_NAME = N{table});", .con = conn_ext)
+WITH (DATA_SOURCE = [{DBI::SQL(data_source)}], SCHEMA_NAME = N{schema}, OBJECT_NAME = N{table});", .con = conn_ext)
   
   # Display SQL script in console
   if(sql_display == T) {
