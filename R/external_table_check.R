@@ -2,9 +2,11 @@
 
 #### PARAMETERS ####
 # conn = name of the connection to the SQL database with source table
+# db = name of database/data warehouse for source table, must be inthealth_edw or inthealth_dwhealth
 # schema = name of schema for source table
 # table = name of source table
 # conn_ext = name of the connection to the SQL database with source external
+# db_ext = name of database/data warehouse for external table
 # schema_ext = name of schema for external table
 # table_ext = name of external table
 # sql_display = show the SQL script in Console
@@ -104,7 +106,7 @@ DROP EXTERNAL TABLE {`schema_ext`}.{`table_ext`};", .con = conn_ext)
   }
   
   # Sets datasource depending on source database
-  if(db == "intheath_edw") {
+  if(db == "inthealth_edw") {
     data_source <- "datasrc_WS_EDW"
   } else {
     data_source <- "datasrc_WS_IntHealth"
