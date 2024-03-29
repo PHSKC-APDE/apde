@@ -44,7 +44,7 @@ external_table_check_f <- function(conn,
                                                     '[', [COLUMN_NAME], '] ', 
                                                     UPPER([DATA_TYPE]), 
 	                                                  CASE
-                                                  		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',[CHARACTER_MAXIMUM_LENGTH], ')')
+                                                  		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',[CHARACTER_MAXIMUM_LENGTH], ') ', [COLLATION_NAME])
                                                   		WHEN [DATA_TYPE] IN('DECIMAL', 'NUMERIC') THEN CONCAT('(', [NUMERIC_PRECISION], ',', [NUMERIC_SCALE], ')')
                                                   		ELSE ''
                                                   	END,
@@ -75,7 +75,7 @@ external_table_check_f <- function(conn,
                                                     '[', [COLUMN_NAME], '] ', 
                                                     UPPER([DATA_TYPE]), 
 	                                                  CASE
-                                                  		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',[CHARACTER_MAXIMUM_LENGTH], ')')
+                                                  		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',[CHARACTER_MAXIMUM_LENGTH], ') ', [COLLATION_NAME])
                                                   		WHEN [DATA_TYPE] IN('DECIMAL', 'NUMERIC') THEN CONCAT('(', [NUMERIC_PRECISION], ',', [NUMERIC_SCALE], ')')
                                                   		ELSE ''
                                                   	END,
