@@ -44,7 +44,7 @@ external_table_check_f <- function(conn,
                                                     '[', [COLUMN_NAME], '] ', 
                                                     UPPER([DATA_TYPE]), 
 	                                                  CASE
-                                                  		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',[CHARACTER_MAXIMUM_LENGTH], ') ', [COLLATION_NAME])
+                                                  		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',[CHARACTER_MAXIMUM_LENGTH], ') COLLATE ', [COLLATION_NAME])
                                                   		WHEN [DATA_TYPE] IN('DECIMAL', 'NUMERIC') THEN CONCAT('(', [NUMERIC_PRECISION], ',', [NUMERIC_SCALE], ')')
                                                   		ELSE ''
                                                   	END,
@@ -75,7 +75,7 @@ external_table_check_f <- function(conn,
                                                     '[', [COLUMN_NAME], '] ', 
                                                     UPPER([DATA_TYPE]), 
 	                                                  CASE
-                                                  		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',[CHARACTER_MAXIMUM_LENGTH], ') ', [COLLATION_NAME])
+                                                  		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',[CHARACTER_MAXIMUM_LENGTH], ') COLLATE ', [COLLATION_NAME])
                                                   		WHEN [DATA_TYPE] IN('DECIMAL', 'NUMERIC') THEN CONCAT('(', [NUMERIC_PRECISION], ',', [NUMERIC_SCALE], ')')
                                                   		ELSE ''
                                                   	END,
@@ -107,7 +107,7 @@ DROP EXTERNAL TABLE {`schema_ext`}.{`table_ext`};", .con = conn_ext)
   
   # Sets datasource depending on source database
   if(db == "inthealth_edw") {
-    data_source <- "datasrc_WS_EDW"
+    data_source <- "datascr_WS_EDW"
   } else {
     data_source <- "datasrc_WS_IntHealth"
   }
