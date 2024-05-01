@@ -12,7 +12,7 @@
 
 
 #### FUNCTION ####
-create_db_connection <- function(server = c("phclaims", "hhsaw", "inthealth", "APDEStore"), 
+create_db_connection <- function(server = c("phclaims", "hhsaw", "inthealth"), 
                                  prod = T, 
                                  interactive = F) {
   
@@ -31,9 +31,19 @@ create_db_connection <- function(server = c("phclaims", "hhsaw", "inthealth", "A
   }
   
   if (server == "phclaims") {
-    conn <- DBI::dbConnect(odbc::odbc(), "PHClaims51")
-  } else if (server == "APDEStore") {
-    conn <- DBI::dbConnect(odbc::odbc(), "PH_APDEStore51")
+    odbc_sources <- odbcListDataSources()$name
+    if ("PHClaims" %in% odbc_sources) {
+      conn <- DBI::dbConnect(odbc::odbc(), "PHClaims")
+    }
+    else if ("PHClaims51" %in% odbc_sources) {
+      conn <- DBI::dbConnect(odbc::odbc(), "PHClaims51")
+    }
+    else if ("PHClaims40" %in% odbc_sources) {
+      conn <- DBI::dbConnect(odbc::odbc(), "PHClaims40")
+    }
+    else {
+      stop("PHClaims db is not in available ODBC sources.")
+    }
   } else if (interactive == F) {
     conn <- DBI::dbConnect(odbc::odbc(),
                            driver = "ODBC Driver 17 for SQL Server",
