@@ -216,8 +216,3 @@ table_duplicate_delete_f <- function(conn,
     message("Table(s) deleted.")
   }
 }
-
-
-
-
-conn <- create_db_connection("inthealth", interactive = F, prod = T)
