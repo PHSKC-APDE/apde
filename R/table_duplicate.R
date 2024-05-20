@@ -114,7 +114,7 @@ table_duplicate_f <- function(conn_from,
     message(glue::glue("Table {i}: [{table_df[i, 'from_schema']}].[{table_df[i, 'from_table']}] -> [{table_df[i, 'to_schema']}].[{table_df[i, 'to_table']}]"))
     message("Pulling data from source table...")
     data_from <- DBI::dbGetQuery(conn_from, 
-                                 glue::glue_sql("SELECT TOP (100) * FROM {`table_df[i, 'from_schema']`}.{`table_df[i, 'from_table']`}",
+                                 glue::glue_sql("SELECT * FROM {`table_df[i, 'from_schema']`}.{`table_df[i, 'from_table']`}",
                                                 .con = conn_from))
     message("Checking if destination table exists...")
     if(DBI::dbExistsTable(conn_to, name = DBI::Id(schema = table_df[i, "to_schema"], table = table_df[i, "to_table"])) == T) {
