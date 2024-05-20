@@ -9,7 +9,7 @@
 #### PARAMETERS ####
 # conn_from = name of the connection to the FROM SQL database
 # conn_to = name of the connection to the TO SQL database
-# server_to = name of the server/odbc for the TO SQL database
+# server_to = name of the server/odbc for the TO SQL database. ***IMPORTANT*** For any Azure based duplication, there must be a keyring with a service name that matches the server_to parameter
 # db_to = name of the TO SQL database
 # table_df = data.frame that can hold a list of FROM schema, FROM tables (required), TO schema, and TO tables
 # from_schema = variable for FROM schema for either a single table or can populate any missing data in the table_df from_schema column
