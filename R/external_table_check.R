@@ -57,7 +57,7 @@ external_table_check_f <- function(conn,
                                                 .con = conn))
   
   if(nrow(source_cols) == 0) {
-    stop(glue("Error: The Source Table [{schema}].[{table}] Does NOT Exist!"))
+    stop(glue::glue("Error: The Source Table [{schema}].[{table}] Does NOT Exist!"))
   }
   
   # Get current external column information (blank if none exisits)
@@ -91,7 +91,7 @@ external_table_check_f <- function(conn,
   
   # If everything matches, end function and return TRUE
   if(result == TRUE) {
-    message(glue("Source Table [{schema}].[{table}] Matches External Table [{schema_ext}].[{table_ext}]"))
+    message(glue::glue("Source Table [{schema}].[{table}] Matches External Table [{schema_ext}].[{table_ext}]"))
     return(T)
   }
   
@@ -116,12 +116,12 @@ DROP EXTERNAL TABLE {`schema_ext`}.{`table_ext`};", .con = conn_ext)
   sql <- glue::glue_sql("
 {drop_table}
 CREATE EXTERNAL TABLE {`schema_ext`}.{`table_ext`}
-  ({DBI::SQL(glue_collapse(glue_sql('{DBI::SQL(source_cols$COLUMN_DEFINITION)}',.con = conn_ext), sep = ', \n  '))})
+  ({DBI::SQL(glue::glue_collapse(glue::glue_sql('{DBI::SQL(source_cols$COLUMN_DEFINITION)}',.con = conn_ext), sep = ', \n  '))})
 WITH (DATA_SOURCE = [{DBI::SQL(data_source)}], SCHEMA_NAME = N{schema}, OBJECT_NAME = N{table});", .con = conn_ext)
   
   # Display SQL script in console
   if(sql_display == T) {
-    message(glue("External Table Creation SQL Script for [{schema_ext}].[{table_ext}]:"))
+    message(glue::glue("External Table Creation SQL Script for [{schema_ext}].[{table_ext}]:"))
     message(sql)
   }
   
@@ -130,10 +130,10 @@ WITH (DATA_SOURCE = [{DBI::SQL(data_source)}], SCHEMA_NAME = N{schema}, OBJECT_N
     # If file exists and overwrite is F, append the script to the file.
     # Else, create a new file/overwrite the existing file
     if(file.exists((sql_file_path)) == T && overwrite == F) {
-      message(glue("Appending SQL Script for [{schema_ext}].[{table_ext}] to: {sql_file_path}"))
+      message(glue::glue("Appending SQL Script for [{schema_ext}].[{table_ext}] to: {sql_file_path}"))
       write(paste0("\n", sql), file = sql_file_path, append = T)
     } else {
-      message(glue("Writing SQL Script for [{schema_ext}].[{table_ext}] to: {sql_file_path}"))
+      message(glue::glue("Writing SQL Script for [{schema_ext}].[{table_ext}] to: {sql_file_path}"))
       write(sql, file = sql_file_path, append = F)
     }
   }
