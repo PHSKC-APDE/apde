@@ -180,7 +180,7 @@ table_duplicate_f <- function(conn_from,
 	                                                  CASE
                                                   		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',CASE
                                                   		                                                                    WHEN [CHARACTER_MAXIMUM_LENGTH] = -1 THEN 'MAX'
-                                                  		                                                                    ELSE CAST([CHARACTER_MAXIMUM_LENGTH] AS VARCHAR(3))
+                                                  		                                                                    ELSE CAST([CHARACTER_MAXIMUM_LENGTH] AS VARCHAR(4))
                                                   		                                                                  END
                                                   		                                                                  , ') COLLATE ', [COLLATION_NAME])
                                                   		WHEN [DATA_TYPE] IN('DECIMAL', 'NUMERIC') THEN CONCAT('(', [NUMERIC_PRECISION], ',', [NUMERIC_SCALE], ')')
