@@ -35,14 +35,21 @@ create_db_connection <- function(server = c("phclaims", "hhsaw", "inthealth"),
     if ("PHClaims" %in% odbc_sources) {
       conn <- DBI::dbConnect(odbc::odbc(), "PHClaims")
     }
-    else if ("PHClaims51" %in% odbc_sources) {
-      conn <- DBI::dbConnect(odbc::odbc(), "PHClaims51")
-    }
     else if ("PHClaims40" %in% odbc_sources) {
       conn <- DBI::dbConnect(odbc::odbc(), "PHClaims40")
     }
     else {
       stop("PHClaims db is not in available ODBC sources.")
+    }
+  } else if (server == "phextractstore") {
+    if (prod == T & "PHExtractStoreProd" %in% odbc_sources) {
+      conn <- DBI::dbConnect(odbc::odbc(), "PHExtractStoreProd")
+    }
+    else if (prod == F & "PHExtractStoreDev" %in% odbc_sources) {
+      conn <- DBI::dbConnect(odbc::odbc(), "PHExtractStoreDev")
+    }
+    else {
+      stop("PHExtractStoreProd or Dev is not in available ODBC sources.")
     }
   } else if (interactive == F) {
     conn <- DBI::dbConnect(odbc::odbc(),
