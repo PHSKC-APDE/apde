@@ -125,7 +125,7 @@ table_duplicate_f <- function(conn_from,
       if(nrow(data_to) == 0) {
         table_match <- F
       } else {
-        table_match <- dplyr::all.equal(data_from, data_to, ignore_col_order = F)  
+        suppressWarnings(table_match <- dplyr::all_equal(data_from, data_to, ignore_col_order = F))
       }
       if(table_match == T) {
         message("Destination table matches source table...")
