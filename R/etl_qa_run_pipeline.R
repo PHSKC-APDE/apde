@@ -1,42 +1,84 @@
 # etl_qa_run_pipeline() ... one function to run them all ----
 #' Run ETL Quality Assurance Pipeline
 #'
-#' This function runs a comprehensive quality assurance pipeline for ETL (Extract, Transform, Load) processes.
-#' It analyzes data for missingness, variable distributions, and optionally checks compliance with CHI (Community Health Indicators) standards.
+#' This function runs a comprehensive quality assurance pipeline for ETL 
+#' (Extract, Transform, Load) processes.
+#' It analyzes data for missingness, variable distributions, and optionally 
+#' checks compliance with CHI (Community Health Indicators) standards.
 #'
-#' @param data_source_type Character string specifying the type of data source. Must be one of 'r_dataframe', 'sql_server', or 'rads'.
-#' @param connection A DBIConnection object. _Required only when `data_source_type = 'sql_server'`_.
-#' @param data_params List of parameters specific to the data source. Not all parameters are needed for all data sources. Please review the examples for details. 
-#'  * `check_chi`: Logical vector of length 1. When `check_chi = TRUE`, function will add any known CHI related variables to `cols` and will assess whether their values align with standards in `rads.data::misc_chi_byvars`. Default is FALSE.
-#'  * `cols`: Character vector specifying the column names to analyze, e.g., ` c('race4', 'birth_weight_grams', 'birthplace_city')`
-#'  * `time_range`: Character vector of length 2 specifying the start and end of the time range, e.g., `time_range = c(2015, 2024)`.
-#'  * `time_var`: Character string specifying the time interval variable, e.g., 'chi_year'
-#'  * `data`: Name of a data.frame or data.table that you want to assess with this function. _Required only when `data_source_type = 'r_dataframe'`_.
-#'  * `function_name`: Character string specifying the relevant rads::get_data_xxx function, e.g., `function_name = 'get_data_birth'`. _Required only when `data_source_type = 'rads'`_. 
-#'  * `kingco`: Logical vector of length 1. Identifies whether you want limit the data to King County. _Required only when `data_source_type = 'rads'`_. Default is TRUE.
-#'  * `version`: Character string specifying either `final` or `stage.` _Only necessary when `data_source_type = 'rads'`_. Default is 'stage'
-#'  * `schema_table`: The name of the schema and table to be accessed within the SQL Server `connection`. Must be in the form `myschema.mytable`, with a period as a separator. _Required only when `data_source_type = 'sql_server'`_.
-
-#' @param output_directory Character string specifying the directory where output files will be saved. If NULL, the current working directory is used.
-#' @param digits_mean Integer specifying the number of decimal places for rounding means. Default is 0.
-#' @param digits_prop Integer specifying the number of decimal places for rounding proportions. Default is 3.
-#' @param abs_threshold Numeric threshold for flagging absolute percentage changes in proportions. Permissible range is [0, 100]. Default is 3.
-#' @param rel_threshold Numeric threshold for flagging relative percentage changes in means and medians. Permissible range is [0, 100]. Default is 2.
+#' @param data_source_type Character string specifying the type of data source. 
+#' Must be one of \code{'r_dataframe'}, \code{'sql_server'}, or \code{'rads'}.
+#' @param connection A DBIConnection object. \emph{Required only when 
+#' \code{data_source_type = 'sql_server'}}
+#' @param data_params List of data related parameters specific to the data source. Not all 
+#' parameters are needed for all data sources. Please review the examples for details. 
+#' 
+#' \itemize{
+#'   \item \code{check_chi}: Logical vector of length 1. When \code{check_chi = TRUE}, 
+#'   function will add any available CHI related variables to \code{cols} and 
+#'   will assess whether their values align with standards in 
+#'   \code{rads.data::misc_chi_byvars}. Default is \code{FALSE}
+#'   
+#'   \item \code{cols}: Character vector specifying the column names to analyze, 
+#'   e.g., \code{c('race4', 'birth_weight_grams', 'birthplace_city')}
+#'   
+#'   \item \code{time_range}: Character vector of length 2 specifying the start 
+#'   and end of the time range, e.g., \code{time_range = c(2015, 2024)}
+#'   
+#'   \item \code{time_var}: Character string specifying the time interval variable, 
+#'   e.g., \code{'chi_year'}
+#'   
+#'   \item \code{data}: Name of a data.frame or data.table that you want to assess 
+#'   with this function. \emph{Required only when \code{data_source_type = 'r_dataframe'}}.
+#'   
+#'   \item \code{function_name}: Character string specifying the relevant 
+#'   \code{rads::get_data_xxx} function, e.g., \code{function_name = 'get_data_birth'}. 
+#'   \emph{Required only when \code{data_source_type = 'rads'}}
+#'   
+#'   \item \code{kingco}: Logical vector of length 1. Identifies whether you want 
+#'   limit the data to King County. \emph{Required only when 
+#'   \code{data_source_type = 'rads'}}. Default is \code{TRUE}
+#'   
+#'   \item \code{version}: Character string specifying either \code{'final'} or 
+#'   \code{'stage'}. \emph{Only necessary when \code{data_source_type = 'rads'}}. 
+#'   Default is \code{'stage'}
+#'   
+#'   \item \code{schema_table}: The name of the schema and table to be accessed 
+#'   within the SQL Server \code{connection}. Must be in the form 
+#'   \code{myschema.mytable}, with a period as a separator. 
+#'   \emph{Required only when \code{data_source_type = 'sql_server'}}  
+#'  }
+#'   
+#' @param output_directory Character string specifying the directory where output 
+#' files will be saved. If \code{NULL}, the current working directory is used.
+#' @param digits_mean Integer specifying the number of decimal places for rounding 
+#' means. Default is \code{0}.
+#' @param digits_prop Integer specifying the number of decimal places for rounding 
+#' proportions. Default is \code{3}.
+#' @param abs_threshold Numeric threshold for flagging absolute percentage changes 
+#' in proportions. Permissible range is [0, 100]. Default is \code{3}.
+#' @param rel_threshold Numeric threshold for flagging relative percentage changes 
+#' in means and medians. Permissible range is [0, 100]. Default is \code{2}.
 #'
 #' @return A list containing the final results from the ETL QA pipeline. Specifically, it includes:
 #'   \item{config}{Configuration settings used for the analysis}
-#'   \item{analysis}{Raw analysis results}
-#'   \item{results}{Processed results ready for reporting}
-#'   \item{visualization}{File paths for generated visualizations & tables}
+#'   \item{initial}{Initial ETL QA results}
+#'   \item{final}{Final ETL QA results - ready for reporting}
+#'   \item{exported}{File paths for exported tables and plots}
 #' 
 #' @details
-#' The function provides identical output whether using `rads`, providing a data.table that is in R's memory, or processing data directly on MS SQL Server. The key is to correctly set up the arguments. Please refer to the examples below for models that you should follow. 
+#' The function provides identical output whether using \code{rads}, providing a 
+#' data.table that is in R's memory, or processing data directly on MS SQL Server. 
+#' The key is to correctly set up the arguments. Please refer to the examples 
+#' below for models that you should follow. 
 #' 
 #' @seealso 
-#'  * \code{\link{etl_qa_setup_config}} for Step 1: Creating the `config` object
-#'  * \code{\link{etl_qa_analyze_data}} for Step 2: Analyzing the data
-#'  * \code{\link{etl_qa_prepare_results}} for Step 3: Standardizing the results
-#'  * \code{\link{etl_qa_visualize_results}} for Step 4: Visualizing and exporting the results
+#' \itemize{
+#'   \item \code{\link{etl_qa_setup_config}} for Step 1: Creating the \code{config} object
+#'   \item \code{\link{etl_qa_initial_results}} for Step 2: Initial ETL QA analysis
+#'   \item \code{\link{etl_qa_final_results}} for Step 3: Final / formatted ETL QA analysis
+#'   \item \code{\link{etl_qa_export_results}} for Step 4: Export of tables and plots 
+#' }
 #' 
 #' @export
 #'
@@ -51,7 +93,8 @@
 #'     function_name = 'get_data_birth',
 #'     time_var = 'chi_year',
 #'     time_range = c(2021, 2022),
-#'     cols = c('chi_age', 'race4', 'birth_weight_grams', 'birthplace_city', 'num_prev_cesarean', 'mother_date_of_birth'),
+#'     cols = c('chi_age', 'race4', 'birth_weight_grams', 'birthplace_city', 
+#'              'num_prev_cesarean', 'mother_date_of_birth'),
 #'     version = 'final', 
 #'     kingco = FALSE, 
 #'     check_chi = FALSE
@@ -59,7 +102,8 @@
 #'   output_directory = 'C:/temp/'
 #' )
 #' 
-# Example with R dataframe
+#' 
+#' # Example with R dataframe
 #' birth_data <- get_data_birth(year = c(2021:2022), 
 #'                              kingco = F, 
 #'                              cols = c('chi_age', 'race4', 'birth_weight_grams', 
@@ -96,6 +140,11 @@
 #'   ), 
 #'   output_directory = 'C:/temp/'
 #' )
+#' 
+#' # Confirmation that the results are identical
+#' identical(qa.rads$final, qa.df$final)
+#' identical(qa.rads$final, qa.sql$final)
+#' 
 #' }
 #' 
 #' @importFrom data.table setDT
@@ -108,6 +157,8 @@ etl_qa_run_pipeline <- function(data_source_type,
                                 digits_prop = 3,
                                 abs_threshold = 3,
                                 rel_threshold = 2) {
+  # Set visible bindings for global variables
+  
   # Capture the name of the data source if it's an R data.table/data.frame (annoying hack to extract name from within a list) ----
   if (data_source_type == 'r_dataframe' && 'data' %in% names(data_params)) {
     call <- match.call()  # Capture the original function call
@@ -246,33 +297,35 @@ etl_qa_run_pipeline <- function(data_source_type,
     rel_threshold = rel_threshold
   )
   
-  # Step 2: Process QA data ----
-  message('Analyzing data ... running etl_qa_analyze_data()\n')
-  analysis <- etl_qa_analyze_data(config)
+  # Step 2: Initial QA results ----
+  message('Analyzing data ... running etl_qa_initial_results()\n')
+  qa_initial <- etl_qa_initial_results(config)
   
-  # Step 3: Get QA results ----
-  message('Preparing results ... running etl_qa_prepare_results()\n')
-  results <- etl_qa_prepare_results(analysis, config)
+  # Step 3: Final QA results ----
+  message('Preparing results ... running etl_qa_final_results()\n')
+  qa_final <- etl_qa_final_results(qa_initial, config)
   
   # Step 4: Visualize QA data ----
-  message('Visualizing data ... running etl_qa_visualize_results()\n')
-  visualization <- etl_qa_visualize_results(results, config)
+  message('Visualizing data ... running etl_qa_export_results()\n')
+  exported <- etl_qa_export_results(qa_final, config)
   
   # Return results ----
   return(list(
     config = config,
-    analysis = analysis,
-    results = results,
-    visualization = visualization
+    initial = qa_initial,
+    final = qa_final,
+    exported = exported
   ))
 }
 
-# Tiny helper functions ----
+# Tiny helper function ----
 #' Helper function to provide a default value for NULL
 #'
 #' This infix function returns the first argument if it's not NULL,
 #' otherwise it returns the second argument.
 #'
+#' @name default_value
+#' @rdname default_value
 #' @param x The primary value to check
 #' @param y The default value to use if x is NULL
 #'
@@ -299,20 +352,90 @@ etl_qa_run_pipeline <- function(data_source_type,
 # etl_qa_setup_config() ----
 #' Set up configuration for ETL QA pipeline
 #'
-#' This function creates a configuration object for the ETL QA pipeline based on the provided parameters.
+#' This function creates a configuration object for the ETL QA pipeline based on 
+#' the provided parameters. Called upon by \code{\link{etl_qa_run_pipeline}}.
 #'
-#' @param data_source_type Character string specifying the type of data source.
-#' @param connection A DBIConnection object for SQL Server connections.
-#' @param data_params List of parameters specific to the data source.
-#' @param output_directory Character string specifying the output directory.
-#' @param digits_mean Integer specifying decimal places for mean rounding.
-#' @param digits_prop Integer specifying decimal places for proportion rounding.
-#' @param abs_threshold Numeric threshold for flagging absolute changes.
-#' @param rel_threshold Numeric threshold for flagging relative changes.
+#' @param data_source_type Character string specifying the type of data source
+#' @param connection A DBIConnection object for SQL Server connections
+#' @param data_params List of parameters specific to the data source
+#' @param output_directory Character string specifying the output directory
+#' @param digits_mean Integer specifying decimal places for mean rounding
+#' @param digits_prop Integer specifying decimal places for proportion rounding
+#' @param abs_threshold Numeric threshold for flagging absolute changes
+#' @param rel_threshold Numeric threshold for flagging relative changes
+#'
+#' @details
+#' The arguments are identical to those used by \code{\link{etl_qa_run_pipeline}}. 
+#' Please review that helpful for details.  
 #'
 #' @return An S3 object of class "qa_data_config", which is a list containing the configuration settings.
 #'
 #' @keywords internal
+#' 
+#' @examples
+#' \dontrun{
+#' # The following examples generate config objects which can be passed to 
+#' # etl_qa_initial_results()
+#' 
+#' # Example with RADS 
+#' config.rads <- etl_qa_setup_config(
+#'   data_source_type = 'rads',
+#'   data_params = list(
+#'     function_name = 'get_data_birth',
+#'     time_var = 'chi_year',
+#'     time_range = c(2021, 2022),
+#'     cols = c('chi_age', 'race4', 'birth_weight_grams', 'birthplace_city', 
+#'              'num_prev_cesarean', 'mother_date_of_birth'),
+#'     version = 'final', 
+#'     kingco = FALSE, 
+#'     check_chi = FALSE
+#'   ), 
+#'   output_directory = 'C:/temp/'
+#' )
+#' class(config.rads)
+#' 
+#' 
+#' # Example with R data.frame
+#' birth_data <- get_data_birth(year = c(2021:2022), 
+#'                              kingco = F, 
+#'                              cols = c('chi_age', 'race4', 'birth_weight_grams', 
+#'                              'birthplace_city', 'num_prev_cesarean', 
+#'                              'chi_year', 'mother_date_of_birth'), 
+#' )
+#' config.df <- etl_qa_setup_config(
+#'   data_source_type = 'r_dataframe',
+#'   data_params = list(
+#'     data = birth_data,
+#'     time_var = 'chi_year',
+#'     time_range = c(2021, 2022),
+#'     cols = c('chi_age', 'race4', 'birth_weight_grams', 'birthplace_city', 
+#'              'num_prev_cesarean', 'mother_date_of_birth'), 
+#'     check_chi = FALSE
+#'   ), 
+#'   output_directory = 'C:/temp/'
+#' )
+#' class(config.df)
+#'
+#'
+#' # Example with SQL Server
+#' library(DBI)
+#' myconnection <- rads::validate_hhsaw_key()
+#' config.sql <- etl_qa_setup_config(
+#'   data_source_type = 'sql_server',
+#'   connection = myconnection,
+#'   data_params = list(
+#'     schema_table = 'birth.final_analytic',
+#'     time_var = 'chi_year',
+#'     time_range = c(2021, 2022),
+#'     cols =c('chi_age', 'race4', 'birth_weight_grams', 'birthplace_city', 
+#'             'num_prev_cesarean', 'mother_date_of_birth'), 
+#'     check_chi = FALSE
+#'   ), 
+#'   output_directory = 'C:/temp/'
+#' )
+#' class(config.sql)
+#' 
+#' }
 #' 
 #' @importFrom data.table setDT
 #' 
@@ -324,6 +447,7 @@ etl_qa_setup_config <- function(data_source_type,
                                 digits_prop = 3,
                                 abs_threshold = 3,
                                 rel_threshold = 2) {
+  # Set visible bindings for global variables
   
   # Capture the name of the data.table/data.frame and add to params (need to do first, before any arguments evaluated or modified)
   if(is.null(data_params$data_source) & 'data' %in% names(data_params)){ # will already exist if called upon by etl_qa_run_pipeline()
@@ -424,10 +548,12 @@ etl_qa_setup_config <- function(data_source_type,
 #------------------------- ----
 #---- STEP 2: Analyze data ----
 #------------------------- ----
-# etl_qa_analyze_data() ----
-#' Analyze data for ETL QA pipeline
+# etl_qa_initial_results() ----
+#' Initial QA results for ETL QA pipeline
 #'
-#' This function performs the core analysis for the ETL QA pipeline, processing data based on the provided configuration.
+#' This function performs the core analysis for the ETL QA pipeline, processing 
+#' data based on the provided configuration. It is the second step run by 
+#' \code{\link{etl_qa_run_pipeline}}.
 #'
 #' @param config An S3 object of class "qa_data_config" containing configuration settings.
 #'
@@ -436,16 +562,49 @@ etl_qa_setup_config <- function(data_source_type,
 #'   \item{vals_continuous}{The minimum, median, mean, and maximum for all numeric variables with > 6 distinct values}
 #'   \item{vals_date}{The minimum, median, and maximum for all date / datetime variables with > 6 distinct values}
 #'   \item{vals_categorical}{A frequency table of the top 8 most frequent values 
-#'         of categorical variable (and numerics or dates with <= 6 values) PLUS a rows for `NA` 
+#'         of categorical variable (and numerics or dates with <= 6 distinct values) PLUS a rows for \code{NA} 
 #'         PLUS a row for all 'Other values'}
-#'   \item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on `rads.data::misc_chi_byvars`}
+#'   \item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on \code{rads.data::misc_chi_byvars}}
+#'
+#' @examples
+#' \dontrun{
+#' 
+#' # Step 1: generate a config object 
+#' myconfig <- etl_qa_setup_config(
+#'   data_source_type = 'rads',
+#'   data_params = list(
+#'     function_name = 'get_data_birth',
+#'     time_var = 'chi_year',
+#'     time_range = c(2021, 2022),
+#'     cols = c('chi_age', 'race4', 'birth_weight_grams', 'birthplace_city', 
+#'              'num_prev_cesarean', 'mother_date_of_birth'),
+#'     version = 'final', 
+#'     kingco = FALSE, 
+#'     check_chi = FALSE
+#'   ), 
+#'   output_directory = 'C:/temp/'
+#' )
+#' 
+#' 
+#' # Step 2: perform the calculations
+#' initial_results <- etl_qa_initial_results(myconfig)
+#' 
+#' # Peek at the tables
+#' head(initial_results$missing_data)
+#' head(initial_results$vals_categorical)
+#' head(initial_results$vals_continuous)
+#' head(initial_results$vals_date)
+#' 
+#' }
 #'
 #' @keywords internal
 #' 
 #' @importFrom data.table setorderv setDT
-#' @importFrom rads.data misc_chi_byvars
 #' 
-etl_qa_analyze_data <- function(config) {
+etl_qa_initial_results <- function(config) {
+  # Set visible bindings for global variables
+  
+  
   # Get the list of data.tables based on the data source type
   data_list <- NULL
   if (config$data_source_type == 'r_dataframe') {
@@ -473,11 +632,15 @@ etl_qa_analyze_data <- function(config) {
 #' 
 #' @keywords internal
 #' 
-#' @importFrom data.table setDT melt setnames setorderv
+#' @importFrom data.table setDT melt setnames setorderv data.table rbindlist
 #' @importFrom knitr kable
-#' @importFrom rads.data misc_chi_byvars
+#' @importFrom stats median
 #' 
 process_r_dataframe <- function(config) {
+  # Set visible bindings for global variables
+  value <- variable <- varname <- group <- chi_year <- chi <- NULL
+  '.SD' <- '.N' <- NULL
+  
   dt <- setDT(config$data_params$data)
   
   # Filter by time range if specified ----
@@ -521,9 +684,9 @@ process_r_dataframe <- function(config) {
   # Calculate missing data ----
   missing_data <- suppressWarnings(melt(dt, id.vars = c(config$time_var), measure.vars = setdiff(names(dt), c(config$time_var)))) # melt dt wide to long format
   
-  missing_data <- missing_data[, .(nrow = sum(is.na(value)), 
+  missing_data <- missing_data[, list(nrow = sum(is.na(value)), 
                                    proportion = sum(is.na(value)) / .N), 
-                               by = .(get(config$time_var), variable)]
+                               by = list(get(config$time_var), variable)]
   
   setnames(missing_data, c("get", "variable"), c(config$time_var, "varname"))
   missing_data[, varname := as.character(varname)]
@@ -535,10 +698,10 @@ process_r_dataframe <- function(config) {
     dt[, (numeric_cols) := lapply(.SD, as.double), .SDcols = numeric_cols]
     vals_continuous <- melt(dt, id.vars = c(config$time_var), measure.vars = numeric_cols, variable.name = 'varname') # melt dt wide to long format
     
-    vals_continuous <- vals_continuous[, .(mean = as.double(mean(value, na.rm = TRUE)), # calculate stats
+    vals_continuous <- vals_continuous[, list(mean = as.double(mean(value, na.rm = TRUE)), # calculate stats
                                            median = as.double(median(value, na.rm = TRUE)),
                                            min = as.double(min(value, na.rm = TRUE)),
-                                           max = as.double(max(value, na.rm = TRUE))), by = .(get(config$time_var), varname)]
+                                           max = as.double(max(value, na.rm = TRUE))), by = list(get(config$time_var), varname)]
     
     setnames(vals_continuous,  c("get"), c(config$time_var))
     vals_continuous[, varname := as.character(varname)]} else {
@@ -553,9 +716,9 @@ process_r_dataframe <- function(config) {
     
     vals_date <- melt(dt, id.vars = c(config$time_var), measure.vars = date_cols, variable.name = 'varname') # melt dt wide to long format
     
-    vals_date <- vals_date[, .(median = median(value, na.rm = TRUE),
+    vals_date <- vals_date[, list(median = median(value, na.rm = TRUE),
                                min = min(value, na.rm = TRUE),
-                               max = max(value, na.rm = TRUE)), by = .(get(config$time_var), varname)]
+                               max = max(value, na.rm = TRUE)), by = list(get(config$time_var), varname)]
     
     setnames(vals_date, c("get"), c(config$time_var))
     vals_date[, varname := as.character(varname)]
@@ -571,7 +734,7 @@ process_r_dataframe <- function(config) {
     vals_categorical <- melt(dt, id.vars = config$time_var, measure.vars = categorical_cols, # wide to long
                              value.name = "value", variable.name = 'varname', variable.factor = FALSE)
     
-    vals_categorical <- vals_categorical[, .(count = .N), by = c(config$time_var, 'varname', 'value')]
+    vals_categorical <- vals_categorical[, list(count = .N), by = c(config$time_var, 'varname', 'value')]
   } else {
     vals_categorical = data.table() # create a data.table with zero columns and zero rows, just to have a data.table object so rest of code will work
   }
@@ -582,7 +745,7 @@ process_r_dataframe <- function(config) {
   # Comparison with CHI standards (if needed) ----
   if(isTRUE(config$data_params$check_chi)){
     # Get all gold standard CHI varnames and groups
-    chi_std <- rads.data::misc_chi_byvars[, .(varname, group, chi = 1L)]
+    chi_std <- rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)]
     
     # Identify all chi variables that are in the data.frame/data.table
     chi_dtvars <- unique(intersect(names(dt), unique(chi_std$varname)))
@@ -593,7 +756,7 @@ process_r_dataframe <- function(config) {
     
     # Generate & tidy table of varnames and values by year ----
     your_data <- rbindlist(lapply(chi_dtvars, function(col) {
-      unique(dt[, .(varname = col, 
+      unique(dt[, list(varname = col, 
                     group = as.character(.SD[[col]])), 
                 by = chi_year, 
                 .SDcols = col
@@ -606,7 +769,7 @@ process_r_dataframe <- function(config) {
     chi_std_comparison <- merge(your_data, 
                                 chi_std, 
                                 by = c('varname', 'group'),
-                                all = T)[, .(chi_year, varname, group, your_data, chi)]
+                                all = T)[, list(chi_year, varname, group, your_data, chi)]
     
     chi_std_comparison[is.na(your_data), your_data := 0]
     chi_std_comparison[is.na(chi), chi := 0]  
@@ -631,10 +794,12 @@ process_r_dataframe <- function(config) {
 #' @keywords internal
 #' 
 #' @importFrom data.table setDT 
+#' @importFrom utils getFromNamespace
 #' @import rads
-#' @importFrom rads.data misc_chi_byvars
 #' 
 process_rads_data <- function(config) {
+  # Set visible bindings for global variables
+  
   # Validate config$data_params$kingco
   config$data_params$kingco <- config$data_params$kingco %||% TRUE
   if (!is.logical(config$data_params$kingco) || length(config$data_params$kingco) != 1 || is.na(config$data_params$kingco)) {
@@ -669,7 +834,7 @@ process_rads_data <- function(config) {
     possiblecols))
   
   # Use the appropriate get_data_xxx function ----
-  data_func <- getFromNamespace(config$data_params$function_name, "rads") # dynamically get the get_data_xxx function without loading all of rads
+  data_func <- utils::getFromNamespace(config$data_params$function_name, "rads") # dynamically get the get_data_xxx function without loading all of rads
   
   dt <- data_func(year = config$time_range[1]:config$time_range[2],
                   cols = unique(c(config$time_var, config$data_params$cols)),
@@ -686,13 +851,15 @@ process_rads_data <- function(config) {
 #' 
 #' @keywords internal
 #' 
-#' @importFrom data.table setDT
+#' @importFrom data.table setDT data.table
 #' @importFrom DBI dbGetQuery
 #' @importFrom glue glue
 #' @importFrom knitr kable
-#' @importFrom rads.data misc_chi_byvars
 #' 
 process_sql_server <- function(config) {
+  # Set visible bindings for global variables
+  value <- varname <- group <- chi_year <- your_data <- chi <- varname <- category <- NULL
+  
   # Identify CHI variable (if needed) ----
   possiblecols <- names(DBI::dbGetQuery(conn = config$connection, glue::glue("SELECT TOP(0) * FROM {config$data_params$schema_table}")))
   
@@ -760,7 +927,7 @@ process_sql_server <- function(config) {
   # Comparison with CHI standards (if needed) ----
   if(isTRUE(config$data_params$check_chi)){
     # Get all gold standard CHI varnames and groups
-    chi_std <- rads.data::misc_chi_byvars[, .(varname, group, chi = 1L)]
+    chi_std <- rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)]
     
     # Limit chi_std to varnames in frequency table
     chi_std <- chi_std[varname %in% unique(categorical_freq$varname)]
@@ -769,14 +936,14 @@ process_sql_server <- function(config) {
     categorical_freq <- categorical_freq[varname %in% unique(chi_std$varname)]
     
     # Tidy frequency table
-    categorical_freq <- categorical_freq[, .(chi_year, varname, group = value, your_data = 1L)]
+    categorical_freq <- categorical_freq[, list(chi_year, varname, group = value, your_data = 1L)]
     categorical_freq <- categorical_freq[!is.na(group)]
     
     # Merge CHI standards onto actual data ----
     chi_std_comparison <- merge(categorical_freq, 
                                 chi_std, 
                                 by = c('varname', 'group'),
-                                all = T)[, .(chi_year, varname, group, your_data, chi)]
+                                all = T)[, list(chi_year, varname, group, your_data, chi)]
     
     chi_std_comparison[is.na(your_data), your_data := 0]
     chi_std_comparison[is.na(chi), chi := 0]  
@@ -802,15 +969,17 @@ process_sql_server <- function(config) {
 #' 
 #' @keywords internal
 #' 
-#' @importFrom data.table setorder
+#' @importFrom data.table setorder ":="
 #' @importFrom knitr kable
-#' @importFrom rads.data misc_chi_byvars
 #' @importFrom rads format_time
 #' 
 comp_2_chi_std <- function(myCHIcomparison){
+  # Set visible bindings for global variables
+  your_data <- varname <- group <- note <- chi <- chi_year <- NULL
+  
   # Expects data.table with chi_year <integer>, varname <character>, group <character>, your_data <integer/logical>, chi <integer/logical>
   # Identify data in CHI standard table that is not in the dataset ----
-  only_chi <- myCHIcomparison[your_data == 0][, .(varname, group)]
+  only_chi <- myCHIcomparison[your_data == 0][, list(varname, group)]
   only_chi[varname == 'chi_race_7' & group == 'Hispanic', note := "It's OK! A race variable cannot also represent ethnicity."]
   only_chi[varname == 'race3' & group == 'Hispanic', note := "It's OK! A race variable cannot also represent ethnicity."]
   only_chi[varname == 'race3' & group == 'Non-Hispanic', note := "It's OK! A race variable cannot also represent ethnicity."]
@@ -830,9 +999,9 @@ comp_2_chi_std <- function(myCHIcomparison){
   
   # Identify data in mydata that is not the CHI standard table ----
   only_your_data <- myCHIcomparison[chi == 0]
-  only_your_data <- only_your_data[, .(chi_year = rads::format_time(chi_year)), .(varname, group)]
+  only_your_data <- only_your_data[, list(chi_year = rads::format_time(chi_year)), list(varname, group)]
   setorder(only_your_data, varname, group)
-  formatted_table2 <- knitr::kable(only_your_data[, .(chi_year, varname, group)], 
+  formatted_table2 <- knitr::kable(only_your_data[, list(chi_year, varname, group)], 
                                    format = "pipe", 
                                    align = c('r', 'l', 'l'))
   if (nrow(only_your_data) > 0){
@@ -853,9 +1022,12 @@ comp_2_chi_std <- function(myCHIcomparison){
 #' 
 #' @keywords internal
 #' 
-#' @importFrom data.table copy frankv
+#' @importFrom data.table copy frankv data.table
 #' 
 keep_top_8 <- function(categorical_freq, config){
+  # Set visible bindings for global variables
+  value <- count <- proportion <- NULL
+  
   if(nrow(categorical_freq) > 0){
     vals_frequent <- copy(categorical_freq)
     vals_frequent <- vals_frequent[!is.na(value), rank := frankv(-count, ties.method = "random"), by = c(config$time_var, 'varname')]
@@ -866,7 +1038,7 @@ keep_top_8 <- function(categorical_freq, config){
                               by = c(config$time_var, 'varname', 'value'), 
                               all = TRUE)
     categorical_freq[is.na(rank), value := 'Other values']
-    categorical_freq <- categorical_freq[, .(count = sum(count, na.rm = TRUE)), by = c(config$time_var, 'varname', 'value')]
+    categorical_freq <- categorical_freq[, list(count = sum(count, na.rm = TRUE)), by = c(config$time_var, 'varname', 'value')]
     categorical_freq[, proportion := count / sum(count), by = c(config$time_var, 'varname')]
     return(categorical_freq)
   } else { categorical_freq = data.table()}
@@ -883,6 +1055,9 @@ keep_top_8 <- function(categorical_freq, config){
 #' @importFrom glue glue
 #' 
 split_column_types <- function(config) {
+  # Set visible bindings for global variables
+  varname <- category <- NULL
+  
   # Split schema and table name ----
   schema_table <- strsplit(config$data_params$schema_table, "\\.")[[1]]
   schema_name <- schema_table[1]
@@ -976,6 +1151,8 @@ split_column_types <- function(config) {
 #' @importFrom glue glue
 #'  
 generate_missing_query <- function(config) {
+  # Set visible bindings for global variables
+  
   # on 9/16 compared with using simple query for 1 var at a time using future_apply to append. The SQL code below was much faster. 
   # Get the column names
   cols <- setdiff(config$data_params$cols, config$time_var)
@@ -1018,6 +1195,9 @@ generate_missing_query <- function(config) {
 #' @importFrom glue glue
 #'  
 generate_numeric_query <- function(config) {
+  # Set visible bindings for global variables
+  
+  
   # Helper function to properly format SQL identifiers
   sql_ident <- function(x) {
     paste0("[", gsub("]", "]]", x), "]")
@@ -1121,6 +1301,8 @@ generate_numeric_query <- function(config) {
 #' @importFrom glue glue
 #'  
 generate_date_query <- function(config) {
+  # Set visible bindings for global variables
+  
   # Helper function to properly format SQL identifiers
   sql_ident <- function(x) {
     paste0("[", gsub("]", "]]", x), "]")
@@ -1229,6 +1411,8 @@ generate_date_query <- function(config) {
 #' @importFrom glue glue
 #'  
 generate_categorical_query <- function(config) {
+  # Set visible bindings for global variables
+  
   sql_ident <- function(x) {
     paste0("[", gsub("]", "]]", x), "]")
   }
@@ -1269,43 +1453,82 @@ generate_categorical_query <- function(config) {
 #----------------------------- ----
 #---- STEP 3: Get tidy results ----
 #----------------------------- ----
-# etl_qa_prepare_results() ----
-#' Prepare results for ETL QA pipeline
+# etl_qa_final_results() ----
+#' Final QA results for ETL QA pipeline
 #'
-#' This function processes the raw analysis results from `etl_qa_analyze_data()` into a format suitable for reporting and visualization.
+#' This function processes the initial results from \code{\link{etl_qa_initial_results}} 
+#' into a format suitable for reporting and visualization. It is the third step 
+#' run by \code{\link{etl_qa_run_pipeline}}.
 #'
-#' @param processed_data A list containing the raw analysis results.
+#' @param initial_qa_results A list containing the initial QA results.
 #' @param config An S3 object of class "qa_data_config" containing configuration settings.
 #'
 #' @return A list containing formatted and combined results that consists of:
 #'   \item{missingness}{Structured summary of the proportion of missing data per variable and time point}
 #'   \item{values}{Combined table with the frequency of categorical variables and simple statistics for numeric and date / datetime variables}
-#'   \item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on `rads.data::misc_chi_byvars`}
+#'   \item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on \code{rads.data::misc_chi_byvars}}
+#'
+#' @examples
+#' \dontrun{
+#' 
+#' # Step 1: generate a config object 
+#' myconfig <- etl_qa_setup_config(
+#'   data_source_type = 'rads',
+#'   data_params = list(
+#'     function_name = 'get_data_birth',
+#'     time_var = 'chi_year',
+#'     time_range = c(2021, 2022),
+#'     cols = c('chi_age', 'race4', 'birth_weight_grams', 'birthplace_city', 
+#'              'num_prev_cesarean', 'mother_date_of_birth'),
+#'     version = 'final', 
+#'     kingco = FALSE, 
+#'     check_chi = TRUE
+#'   ), 
+#'   output_directory = 'C:/temp/'
+#' )
+#' 
+#' # Step 2: prep the initial results
+#' initial_results <- etl_qa_initial_results(config = myconfig)
+#' 
+#' # Step 3: prep the final results
+#' final_results <- etl_qa_final_results(initial_qa_results = initial_results, 
+#'                                       config = myconfig)
+#' 
+#' # Peek at the tables
+#' head(final_results$missingness)
+#' head(final_results$values)
+#' head(final_results$chi_standards)
+#' 
+#' }
 #'
 #' @keywords internal
 #' 
-#' @importFrom data.table setnames setorderv 
+#' @importFrom data.table setnames setorderv ":=" fifelse shift
 #' @importFrom rads round2
 #' 
-etl_qa_prepare_results <- function(processed_data, config) {
+etl_qa_final_results <- function(initial_qa_results, config) {
+  # Set visible bindings for global variables
+  abs_change <- proportion <- varname <- time_period <- abs_proportion_change <- NULL
+  value <- median <- your_data <- chi <- problem <- vartype <- 
+  
   # Extract the time variable name from the config ----
   time_var <- config$time_var
   
   # Process missing data ----
-  missing_data <- processed_data$missing_data
+  missing_data <- initial_qa_results$missing_data
   if (!is.null(missing_data)) {
     setnames(missing_data, time_var, "time_period")
     missing_data[, abs_change := fifelse(
       abs((proportion - shift(proportion)) * 100) > config$abs_threshold, 
       paste0(round((proportion - shift(proportion)) * 100, 1), "%"),
       NA_character_
-    ), by = .(varname)]
+    ), by = list(varname)]
     setorder(missing_data, varname, time_period)
     missing_data[, proportion := rads::round2(proportion, config$digits_prop)] 
   }
   
   # Process categorical data ----
-  vals_categorical <- processed_data$vals_categorical
+  vals_categorical <- initial_qa_results$vals_categorical
   if (nrow(vals_categorical) > 0) {
     if (!is.null(vals_categorical)) {
       setnames(vals_categorical, time_var, "time_period")
@@ -1313,13 +1536,13 @@ etl_qa_prepare_results <- function(processed_data, config) {
         abs((proportion - shift(proportion)) * 100) > config$abs_threshold, 
         paste0(round((proportion - shift(proportion)) * 100, 1), "%"),
         NA_character_
-      ), by = .(varname, value)]
+      ), by = list(varname, value)]
       vals_categorical[, proportion := rads::round2(proportion, config$digits_prop)] 
     }
   }
   
   # Process continuous data ----
-  vals_continuous <- processed_data$vals_continuous
+  vals_continuous <- initial_qa_results$vals_continuous
   if (nrow(vals_continuous) > 0) {
     if (!is.null(vals_continuous)) {
       setnames(vals_continuous, time_var, "time_period")
@@ -1334,20 +1557,20 @@ etl_qa_prepare_results <- function(processed_data, config) {
           paste0(round((median / shift(median) - 1) * 100, 1), "%"),
           NA_character_
         )
-      ), by = .(varname)]
+      ), by = list(varname)]
       vals_continuous[, mean := rads::round2(mean, config$digits_mean)]
     }
   }
   
   # Process date data ----
-  vals_date <- processed_data$vals_date
+  vals_date <- initial_qa_results$vals_date
   if (nrow(vals_date) > 0) {
     setnames(vals_date, time_var, "time_period")
     setnames(vals_date, c('median', 'min', 'max'), c('median_date', 'min_date', 'max_date')) # need to change names because otherwise date format would be lost when combined with numeric data
   }
   
   # Process CHI comparison data ----
-  chi_standards <- processed_data$chi_standards
+  chi_standards <- initial_qa_results$chi_standards
   if (nrow(chi_standards) > 0){
     chi_standards[your_data == 0 | chi == 0, problem := '*']
   }
@@ -1364,7 +1587,7 @@ etl_qa_prepare_results <- function(processed_data, config) {
     c('time_var' = time_var, 'time_period', 'vartype', 'varname', 'value', 'mean', 'median', 'min', 'max', 'median_date', 'min_date', 'max_date', 'count', 'proportion', 'abs_proportion_change', 'rel_mean_change', 'rel_median_change')
   )
   
-  values <- values[, ..keepvars]
+  values <- values[, keepvars, with = FALSE]
   setorderv(values, intersect(c('varname', 'value', 'time_period'), names(values)))
   
   # Return results as a list ----
@@ -1374,15 +1597,17 @@ etl_qa_prepare_results <- function(processed_data, config) {
     chi_standards = chi_standards
   ))
 }
-#--------------------------------------- ----
-#---- STEP 4: Vizualize & export results ----
-#--------------------------------------- ----
-# etl_qa_visualize_results() ... main function ----
-#' Visualize & export results for ETL QA pipeline
+
+#------------------------------------------------- ----
+#---- STEP 4: Export tables & graphs of QA results ----
+#------------------------------------------------- ----
+# etl_qa_export_results() ... main function ----
+#' Export tables and graphs of ETL QA pipeline results
 #'
-#' This function creates visualizations of the QA results and saves them as PDF files. It also exports tabular results to an Excel file.
+#' This function exports Excel tables and PDF plots of ETL QA results. It is the 
+#' fourth and final step run by \code{\link{etl_qa_run_pipeline}}.
 #'
-#' @param qa_results A list containing the processed QA results from `etl_qa_prepare_results()`
+#' @param qa_results A list containing the processed QA results from \code{etl_qa_final_results()}
 #' @param config An S3 object of class "qa_data_config" containing configuration settings.
 #'
 #' @return A list the file paths for the exported data:
@@ -1390,11 +1615,46 @@ etl_qa_prepare_results <- function(processed_data, config) {
 #'   \item{pdf_values}{File path to PDF of plots of frequency and statistical changes over time}
 #'   \item{excel}{File path to Excel file with tabs for missingness, values, CHI comparisons}
 #'
+#' @examples
+#' \dontrun{
+#' 
+#' # Step 1: generate a config object 
+#' myconfig <- etl_qa_setup_config(
+#'   data_source_type = 'rads',
+#'   data_params = list(
+#'     function_name = 'get_data_birth',
+#'     time_var = 'chi_year',
+#'     time_range = c(2021, 2022),
+#'     cols = c('chi_age', 'race4', 'birth_weight_grams', 'birthplace_city', 
+#'              'num_prev_cesarean', 'mother_date_of_birth'),
+#'     version = 'final', 
+#'     kingco = FALSE, 
+#'     check_chi = TRUE
+#'   ), 
+#'   output_directory = 'C:/temp/'
+#' )
+#' 
+#' # Step 2: prep the initial results
+#' initial_results <- etl_qa_initial_results(config = myconfig)
+#' 
+#' # Step 3: prep the final results
+#' final_results <- etl_qa_final_results(initial_qa_results = initial_results, 
+#'                                       config = myconfig)
+#' 
+#' # Step 4: Export tables and visualizations
+#' etl_qa_export_results(qa_results = final_results, config = myconfig)
+#' 
+#' }
+#'
 #' @keywords internal
 #' 
 #' @importFrom openxlsx createWorkbook addWorksheet writeDataTable saveWorkbook
+#' @importFrom grDevices pdf dev.off
 #' 
-etl_qa_visualize_results <- function(qa_results, config) {
+etl_qa_export_results <- function(qa_results, config) {
+  # Set visible bindings for global variables
+  varname <- NULL
+  
   # Extract information from config ----
   output_directory <- config$output_directory
   time_var <- config$time_var
@@ -1413,7 +1673,7 @@ etl_qa_visualize_results <- function(qa_results, config) {
     plot_data <- plot_data[!is.na(varname)] # arises where there were no date variables, or no continous variables, etc.
     
     pdf_file <- file.path(output_directory, paste0(datasource, '_qa_', plot_type, '_', gsub("-", "_", Sys.Date()), '.pdf'))
-    pdf(pdf_file, onefile = TRUE, width = 11, height = 8.5)
+    grDevices::pdf(pdf_file, onefile = TRUE, width = 11, height = 8.5)
     
     mytitle <- paste0('Data QA ', plot_type, ': ', 
                       datasource, ' ', 
@@ -1438,7 +1698,7 @@ etl_qa_visualize_results <- function(qa_results, config) {
       }
     }
     
-    dev.off()
+    grDevices::dev.off()
   }
   
   # Create plots for missing data and values ----
@@ -1480,8 +1740,12 @@ etl_qa_visualize_results <- function(qa_results, config) {
 #' 
 #' @import ggplot2
 #' @importFrom scales hue_pal
+#' @importFrom stats na.omit
 #' 
 plotCATEGORICAL <- function(var_data, time_var, mytitle) {
+  # Set visible bindings for global variables
+  time_period <- proportion <- value <- NULL
+  
   value_levels <- levels(factor(var_data$value, exclude = NULL))
   linetypes <- rep("solid", length(value_levels))
   names(linetypes) <- value_levels
@@ -1516,6 +1780,9 @@ plotCATEGORICAL <- function(var_data, time_var, mytitle) {
 #' @import ggplot2
 #' 
 plotCONTINUOUS <- function(var_data, time_var, mytitle) {
+  # Set visible bindings for global variables
+  time_period <- median <- NULL
+  
   ggplot(var_data) +
     geom_line(aes(x = time_period, y = min, color = "Minimum", linetype = "Minimum"), linewidth = 2) +
     geom_line(aes(x = time_period, y = mean, color = "Mean", linetype = "Mean"), linewidth = 1.5) +
@@ -1547,6 +1814,9 @@ plotCONTINUOUS <- function(var_data, time_var, mytitle) {
 #' @import ggplot2
 #' 
 plotDATE <- function(var_data, time_var, mytitle) {
+  # Set visible bindings for global variables
+  time_period <- min_date <- median_date <- max_date <- NULL
+  
   ggplot(var_data) +
     geom_line(aes(x = time_period, y = min_date, color = "Minimum", linetype = "Minimum"), linewidth = 2) +
     geom_line(aes(x = time_period, y = median_date, color = "Median", linetype = "Median"), linewidth = 1.5) +
@@ -1580,6 +1850,9 @@ plotDATE <- function(var_data, time_var, mytitle) {
 #' @importFrom scales percent_format
 #' 
 plotMISSING <- function(plot_data, time_var, mytitle) {
+  # Set visible bindings for global variables
+  time_period <- proportion <- varname <- vargroup <- NULL
+  
   plot_data[, vargroup := ceiling(as.numeric(factor(varname)) / 16)]
   plots <- list()
   for (ii in unique(plot_data$vargroup)) {
