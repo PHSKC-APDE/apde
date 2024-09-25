@@ -55,8 +55,3 @@ apde_keyring_check_f <- function(keyring){
     message(paste0("Keyring \"", keyring, "\" exists."))
   }
 }
-
-# ### Create 'hhsaw' key only if needed
-# if("hhsaw" %in% keyring::key_list()$service == FALSE){
-#   apde_keyring_set_f("hhsaw")
-# }
