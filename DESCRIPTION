@@ -1,7 +1,7 @@
 Package: apde
 Type: Package
 Title: Common functions used in APDE's work
-Version: 0.3.2
+Version: 0.3.3
 Author@R: c(
   person("Alastair", "Matheson", email = "alastair.matheson@kingcounty.gov", role = c("aut", "cre")))
 Author: Alastair Matheson [aut, cre]
@@ -13,9 +13,21 @@ Description: Primarily for internal use in Public Health - Seattle & King County
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.2
 Imports:
-    dplyr (>= 0.8.4),
+    blastula,
+    configr,
     data.table,
+    dplyr,
+    DBI, 
+    glue,
     httr,
-    rjson
+    keyring, 
+    odbc,
+    RODBC,
+    shiny,
+    shinyWidgets,
+    svDialogs, 
+    sys,
+    yaml
+
