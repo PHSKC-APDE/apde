@@ -1,6 +1,7 @@
 # etl_qa_run_pipeline() ... one function to run them all ----
-#' Run ETL Quality Assurance Pipeline
+#' @title Run ETL Quality Assurance Pipeline
 #'
+#' @description
 #' This function runs a comprehensive quality assurance pipeline for ETL 
 #' (Extract, Transform, Load) processes.
 #' It analyzes data for missingness, variable distributions, and optionally 
@@ -52,7 +53,7 @@
 #' @param output_directory Character string specifying the directory where output 
 #' files will be saved. If \code{NULL}, the current working directory is used.
 #' @param digits_mean Integer specifying the number of decimal places for rounding 
-#' means. Default is \code{0}.
+#' the reported mean, median, min, and max. Default is \code{0}.
 #' @param digits_prop Integer specifying the number of decimal places for rounding 
 #' proportions. Default is \code{3}.
 #' @param abs_threshold Numeric threshold for flagging absolute percentage changes 
@@ -173,16 +174,16 @@ etl_qa_run_pipeline <- function(data_source_type,
   }  
   
   ## Validate connection ----
-  if (data_source_type == 'sql_server' && !inherits(connection, "DBIConnection")) {
+  if (data_source_type == 'sql_server' && !inherits(connection, "DBIConnection") && !is.null(connection)) {
     stop("\U0001f47f\nFor 'sql_server' data_source_type, connection must be a DBIConnection object")
-  }
-  if (data_source_type == 'sql_server' && is.null(connection)) {
+  } else if (data_source_type == 'sql_server' && inherits(connection, "DBIConnection") && !is.null(connection) && !DBI::dbIsValid(connection)){
+    stop("\U0001f47f\nYour `connection` argument is not a valid DBIConnection object. It may have been disconnected. Please reconnect and try again.")
+  } else if (data_source_type == 'sql_server' && is.null(connection)) {
     stop("\U0001f47f\nFor 'sql_server' data_source_type, a DBIConnection object must be provided for the connection argument")
-  }
-  if (data_source_type != 'sql_server' && !is.null(connection)) {
+  } else if (data_source_type != 'sql_server' && !is.null(connection)) {
     warning("\U00026A0\nThe connection argument is ignored when data_source_type != 'sql_server'")
-  }
-  
+  } 
+
   ## Validate data_params ----
   ### data_params is a list ----
   if (!is.list(data_params)) {
@@ -319,8 +320,9 @@ etl_qa_run_pipeline <- function(data_source_type,
 }
 
 # Tiny helper function ----
-#' Helper function to provide a default value for NULL
+#' @title Helper function to provide a default value for NULL
 #'
+#' @description#' 
 #' This infix function returns the first argument if it's not NULL,
 #' otherwise it returns the second argument.
 #'
@@ -350,8 +352,9 @@ etl_qa_run_pipeline <- function(data_source_type,
 #---- STEP 1: Create config object ----
 #--------------------------------- ----
 # etl_qa_setup_config() ----
-#' Set up configuration for ETL QA pipeline
+#' @title Set up configuration for ETL QA pipeline
 #'
+#' @description
 #' This function creates a configuration object for the ETL QA pipeline based on 
 #' the provided parameters. Called upon by \code{\link{etl_qa_run_pipeline}}.
 #'
@@ -396,7 +399,7 @@ etl_qa_run_pipeline <- function(data_source_type,
 #' 
 #' 
 #' # Example with R data.frame
-#' birth_data <- get_data_birth(year = c(2021:2022), 
+#' birth_data <- rads::get_data_birth(year = c(2021:2022), 
 #'                              kingco = F, 
 #'                              cols = c('chi_age', 'race4', 'birth_weight_grams', 
 #'                              'birthplace_city', 'num_prev_cesarean', 
@@ -464,7 +467,7 @@ etl_qa_setup_config <- function(data_source_type,
   # Validate output_directory
   if (!is.null(output_directory)) {
     if (!dir.exists(output_directory)) {
-      stop("\U0001f47f\nSpecified output_directory does not exist")
+      stop("\U0001f47f\nYou have specified an output_directory that does not exist. Please specify an existing directory.")
     }
   } else {
     output_directory <- getwd()
@@ -549,8 +552,9 @@ etl_qa_setup_config <- function(data_source_type,
 #---- STEP 2: Analyze data ----
 #------------------------- ----
 # etl_qa_initial_results() ----
-#' Initial QA results for ETL QA pipeline
-#'
+#' @title Initial QA results for ETL QA pipeline
+#' 
+#' @description
 #' This function performs the core analysis for the ETL QA pipeline, processing 
 #' data based on the provided configuration. It is the second step run by 
 #' \code{\link{etl_qa_run_pipeline}}.
@@ -654,7 +658,7 @@ process_r_dataframe <- function(config) {
     possiblecols <- names(dt)
     
     if(!config$data_params$time_var %in% possiblecols){
-      stop("\U1F6D1\nThe variable specified in data_params$timevar is not available in this dataset.")
+      stop("\U1F6D1\nThe variable specified in data_params$time_var is not available in this dataset.")
     }
     
     if(isTRUE(config$data_params$check_chi)){
@@ -816,7 +820,7 @@ process_rads_data <- function(config) {
   possiblecols <- rads::quiet(rads::list_dataset_columns(gsub('get_data_', '', config$data_params$function_name))[]$var.names)
   
   if(!config$data_params$time_var %in% possiblecols){
-    stop("\U1F6D1\nThe variable specified in data_params$timevar is not available in this dataset.")
+    stop("\U1F6D1\nThe variable specified in data_params$time_var is not available in this dataset.")
   }
   
   if(isTRUE(config$data_params$check_chi)){
@@ -852,7 +856,7 @@ process_rads_data <- function(config) {
 #' @keywords internal
 #' 
 #' @importFrom data.table setDT data.table
-#' @importFrom DBI dbGetQuery
+#' @importFrom DBI dbGetQuery Id dbExistsTable
 #' @importFrom glue glue
 #' @importFrom knitr kable
 #' 
@@ -860,11 +864,19 @@ process_sql_server <- function(config) {
   # Set visible bindings for global variables
   value <- varname <- group <- chi_year <- your_data <- chi <- varname <- category <- NULL
   
+  # Confirm table exists ----
+  myTableID = DBI::Id(schema = strsplit(config$data_params$schema_table, "\\.")[[1]][1], 
+                      table = strsplit(config$data_params$schema_table, "\\.")[[1]][2])
+  
+  if(!DBI::dbExistsTable(conn = config$connection, myTableID)){
+    stop("\n\U1F6D1\nThe table specified by the data_params$schema_table argument does not exist.")
+  }
+  
   # Identify CHI variable (if needed) ----
   possiblecols <- names(DBI::dbGetQuery(conn = config$connection, glue::glue("SELECT TOP(0) * FROM {config$data_params$schema_table}")))
   
   if(!config$data_params$time_var %in% possiblecols){
-    stop("\U1F6D1\nThe variable specified in data_params$timevar is not available in this dataset.")
+    stop("\n\U1F6D1\nThe variable specified in data_params$time_var is not available in this dataset.")
   }
   
   if(isTRUE(config$data_params$check_chi)){
@@ -1454,8 +1466,9 @@ generate_categorical_query <- function(config) {
 #---- STEP 3: Get tidy results ----
 #----------------------------- ----
 # etl_qa_final_results() ----
-#' Final QA results for ETL QA pipeline
+#' @title Final QA results for ETL QA pipeline
 #'
+#' @description
 #' This function processes the initial results from \code{\link{etl_qa_initial_results}} 
 #' into a format suitable for reporting and visualization. It is the third step 
 #' run by \code{\link{etl_qa_run_pipeline}}.
@@ -1559,6 +1572,9 @@ etl_qa_final_results <- function(initial_qa_results, config) {
         )
       ), by = list(varname)]
       vals_continuous[, mean := rads::round2(mean, config$digits_mean)]
+      vals_continuous[, median := rads::round2(median, config$digits_mean)]
+      vals_continuous[, min := rads::round2(min, config$digits_mean)]
+      vals_continuous[, max := rads::round2(max, config$digits_mean)]
     }
   }
   
@@ -1602,8 +1618,9 @@ etl_qa_final_results <- function(initial_qa_results, config) {
 #---- STEP 4: Export tables & graphs of QA results ----
 #------------------------------------------------- ----
 # etl_qa_export_results() ... main function ----
-#' Export tables and graphs of ETL QA pipeline results
+#' @title Export tables and graphs of ETL QA pipeline results
 #'
+#' @description
 #' This function exports Excel tables and PDF plots of ETL QA results. It is the 
 #' fourth and final step run by \code{\link{etl_qa_run_pipeline}}.
 #'
