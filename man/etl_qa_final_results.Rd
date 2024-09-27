@@ -22,6 +22,10 @@ This function processes the initial results from \code{\link{etl_qa_initial_resu
 into a format suitable for reporting and visualization. It is the third step 
 run by \code{\link{etl_qa_run_pipeline}}.
 }
+\details{
+This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+\code{apde:::etl_qa_final_results(...)}.
+}
 \examples{
 \dontrun{
 
