@@ -1,16 +1,14 @@
-suppressWarnings(require(odbc)) # Read to and write from SQL
-suppressWarnings(require(keyring)) # Access stored credentials
-suppressWarnings(require(glue)) # Safely combine code and variables
-suppressWarnings(require(blastula)) # Email functionality
-suppressWarnings(require(svDialogs)) # Create multi-select pop-ups
-suppressWarnings(require(tidyverse)) # Manipulate data
-suppressWarnings(require(dplyr)) # Manipulate data
-suppressWarnings(require(lubridate)) # Manipulate dates
-suppressWarnings(require(shiny)) # UI
-suppressWarnings(require(shinyWidgets)) #UI Widgets
-
-devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/apde/main/R/create_db_connection.R")
-
+# apde_notify_set_cred_f() ----
+#' @title Set Outlook Credentials for APDE Notify
+#' @description Creates and stores Outlook credentials for use with APDE Notify functions.
+#' @importFrom svDialogs dlgInput
+#' @importFrom blastula create_smtp_creds_key
+#' @return None
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_set_cred_f <- function() {
   ## CREATING THE OUTLOOK CREDENTIAL
   ## ENTER EMAIL ADDRESS
@@ -25,6 +23,16 @@ apde_notify_set_cred_f <- function() {
   )
 }
 
+# apde_notify_msgs_get_f() ----
+#' @title Retrieve APDE Notify Messages
+#' @description Fetches all parent messages from the APDE notify_msgs table.
+#' @importFrom DBI dbGetQuery
+#' @return A dataframe containing message information
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_msgs_get_f <- function() {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   msgs <- DBI::dbGetQuery(conn, 
@@ -34,6 +42,22 @@ apde_notify_msgs_get_f <- function() {
                           ORDER BY [msg_name] ASC")
   return(msgs)
 }
+
+# apde_notify_msg_set_f() ----
+#' @title Set or Update APDE Notify Message
+#' @param msg_id Integer. ID of the message to update. Use 0 for new messages.
+#' @param msg_name Character. Name of the message.
+#' @param msg_subject Character. Subject of the message.
+#' @param msg_body Character. Body of the message.
+#' @param msg_from Character. Sender's email address.
+#' @importFrom DBI dbExecute dbGetQuery
+#' @importFrom glue glue_sql
+#' @return Integer. ID of the new or updated message.
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_msg_set_f <- function(msg_id = 0, 
                                   msg_name,
                                   msg_subject,
@@ -81,6 +105,19 @@ apde_notify_msg_set_f <- function(msg_id = 0,
   }
   return(new_id)
 }
+
+# apde_notify_msg_get_f() ----
+#' @title Retrieve a Specific APDE Notify Message
+#' @param msg_id Integer. ID of the message to retrieve.
+#' @param msg_name Character. Name of the message to retrieve.
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+#' @return A dataframe containing the message information.
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_msg_get_f <- function(msg_id = NULL,
                                   msg_name = NULL) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
@@ -98,6 +135,17 @@ apde_notify_msg_get_f <- function(msg_id = NULL,
                                         .con = conn))
   return(msg)
 }
+
+# apde_notify_msg_id_get_f() ----
+#' @title Get APDE Notify Message ID
+#' @param msg_id Integer. ID of the message.
+#' @param msg_name Character. Name of the message.
+#' @return Integer. ID of the message.
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_msg_id_get_f <- function(msg_id = NULL,
                                      msg_name = NULL) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
@@ -112,6 +160,16 @@ apde_notify_msg_id_get_f <- function(msg_id = NULL,
   }
   return(msg_id)
 }
+
+# apde_notify_addresses_get_f() ----
+#' @title Retrieve All APDE Notify Addresses
+#' @importFrom DBI dbGetQuery
+#' @return A dataframe containing all notify addresses.
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_addresses_get_f <- function() {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   addresses <- DBI::dbGetQuery(conn, "SELECT * 
@@ -119,6 +177,19 @@ apde_notify_addresses_get_f <- function() {
                                ORDER BY [address] ASC")
   return(addresses)
 }
+
+# apde_notify_address_get_f() ----
+#' @title Retrieve a Specific APDE Notify Address
+#' @param address_id Integer. ID of the address to retrieve.
+#' @param address Character. Email address to retrieve.
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+#' @return A dataframe containing the address information.
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_address_get_f <- function(address_id = NULL,
                                       address = NULL) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
@@ -133,6 +204,20 @@ apde_notify_address_get_f <- function(address_id = NULL,
                                                   .con = conn))
   return(address)
 }
+
+# apde_notify_address_set_f() ----
+#' @title Update an APDE Notify Address
+#' @param address_id Integer. ID of the address to update.
+#' @param address Character. Current email address.
+#' @param new_address Character. New email address.
+#' @importFrom DBI dbExecute
+#' @importFrom glue glue_sql
+#' @return None
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_address_set_f <- function(address_id = NULL,
                                       address = NULL,
                                       new_address) {
@@ -151,6 +236,18 @@ apde_notify_address_set_f <- function(address_id = NULL,
                                       WHERE [id] = {address_id}",
                                       .con = conn))
 }
+
+# apde_notify_address_create_f() ----
+#' @title Create a New APDE Notify Address
+#' @param address Character. Email address to create.
+#' @importFrom DBI dbExecute
+#' @importFrom glue glue_sql
+#' @return Integer. ID of the newly created address.
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_address_create_f <- function(address) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   address_id <- apde_notify_address_id_get_f(address = address)
@@ -165,6 +262,19 @@ apde_notify_address_create_f <- function(address) {
   address_id <- apde_notify_address_id_get_f(address = address)
   return(address_id)
 }
+
+# apde_notify_address_delete_f() ----
+#' @title Delete an APDE Notify Address
+#' @param address_id Integer. ID of the address to delete.
+#' @param address Character. Email address to delete.
+#' @importFrom DBI dbExecute
+#' @importFrom glue glue_sql
+#' @return None
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_address_delete_f <- function(address_id = NULL,
                                          address = NULL) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
@@ -182,6 +292,17 @@ apde_notify_address_delete_f <- function(address_id = NULL,
                                 WHERE [id] = {address_id}",                              
                                 .con = conn))
 }
+
+# apde_notify_address_id_get_f() ----
+#' @title Get APDE Notify Address ID
+#' @param address_id Integer. ID of the address.
+#' @param address Character. Email address.
+#' @return Integer. ID of the address.
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_address_id_get_f <- function(address_id = NULL,
                                          address = NULL) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
@@ -196,6 +317,19 @@ apde_notify_address_id_get_f <- function(address_id = NULL,
   }
   return(address_id)
 }
+
+# apde_notify_list_get_f() ----
+#' @title Retrieve APDE Notify List for a Message
+#' @param msg_id Integer. ID of the message.
+#' @param msg_name Character. Name of the message.
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+#' @return A dataframe containing the notify list for the specified message.
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_list_get_f <- function(msg_id = NULL,
                                    msg_name = NULL) {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
@@ -213,6 +347,21 @@ apde_notify_list_get_f <- function(msg_id = NULL,
                                           .con = conn))
   return(mlist)  
 }
+
+# apde_notify_list_set_f() ----
+#' @title Set APDE Notify List for a Message
+#' @param msg_id Integer. ID of the message.
+#' @param msg_name Character. Name of the message.
+#' @param choices Vector. List of email addresses to associate with the message.
+#' @importFrom DBI dbExecute
+#' @importFrom glue glue_sql
+#' @importFrom dplyr inner_join
+#' @return None
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_list_set_f <- function(msg_id = NULL,
                                    msg_name = NULL,
                                    choices) {
@@ -230,7 +379,7 @@ apde_notify_list_set_f <- function(msg_id = NULL,
   if(length(choices) > 0) {
     choices <- as.data.frame(choices)
     colnames(choices) <- c("address")
-    choices <- inner_join(choices, address_list)
+    choices <- dplyr::inner_join(choices, address_list)
     for(i in 1:nrow(choices)) {
       DBI::dbExecute(conn, 
                      glue::glue_sql("INSERT INTO [apde].[notify_list]
@@ -242,11 +391,25 @@ apde_notify_list_set_f <- function(msg_id = NULL,
   }
 }
 
+# apde_notify_f() ----
+#' @title Send APDE Notification
+#' @param msg_id Integer. ID of the message to send.
+#' @param msg_name Character. Name of the message to send.
+#' @param vars List. Variables to substitute in the message body.
+#' @importFrom blastula compose_email creds_key md smtp_send
+#' @importFrom glue glue
+#' @importFrom dplyr '%>%'
+#' @return None
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_f <- function(msg_id = NULL,
                           msg_name = NULL,
                           vars) {
   emailReady <- tryCatch(
-    { length(creds_key("outlook")) },
+    { length(blastula::creds_key("outlook")) },
     error = function(x) { return(0) })
   
   if(emailReady == 0) {
@@ -264,7 +427,7 @@ apde_notify_f <- function(msg_id = NULL,
   email_list <- apde_notify_list_get_f(msg_id = msg_id)
   vars <- as.list(vars)
   email <- compose_email(
-    body = md(glue::glue(msg$msg_body)))
+    body = blastula::md(glue::glue(msg$msg_body)))
   email %>%
     smtp_send(
       to = email_list$address,
@@ -274,6 +437,17 @@ apde_notify_f <- function(msg_id = NULL,
     )
 }
 
+# apde_notify_menu_f() ----
+#' @title Launch APDE Notify Menu
+#' @description Launches a Shiny app for managing APDE Notify messages and email lists.
+#' @importFrom shiny fluidPage titlePanel fluidRow column selectInput textInput textAreaInput actionButton hr textOutput observeEvent updateTextInput updateTextAreaInput updateSelectInput reactiveValues renderText shinyApp
+#' @importFrom shinyWidgets multiInput updateMultiInput
+#' @return A Shiny app object
+#' @export
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
 apde_notify_menu_f <- function() {
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   address_list <- apde_notify_addresses_get_f()
@@ -293,7 +467,7 @@ apde_notify_menu_f <- function() {
         actionButton(inputId = "msg_save_btn", label = "Save Message")
       ),
       column(8, 
-        multiInput(inputId = "multi_list", label = "Email List",
+        shinyWidgets::multiInput(inputId = "multi_list", label = "Email List",
                    width = 600, choices = as.list(address_list$address)),
         actionButton(inputId = "list_save_btn", label = "Save Email List"),
         hr(),
@@ -350,10 +524,10 @@ apde_notify_menu_f <- function() {
       }
 
       address_list <- apde_notify_addresses_get_f()
-      updateMultiInput(session = session,
-                        inputId = "multi_list",
-                        choices = as.list(address_list$address),
-                        selected = as.list(current_list$address))
+      shinyWidgets::updateMultiInput(session = session,
+                                     inputId = "multi_list",
+                                     choices = as.list(address_list$address),
+                                     selected = as.list(current_list$address))
     })
     
     observeEvent(input$msg_save_btn, {
@@ -420,10 +594,13 @@ apde_notify_menu_f <- function() {
       }
       address <- input$address_text
       address_list <- apde_notify_addresses_get_f()
-      updateMultiInput(session = session,
-                       inputId = "multi_list",
-                       choices = as.list(address_list$address),
-                       selected = as.list(current_list$address))
+      shinyWidgets::updateMultiInput(session = session,
+                                     inputId = "multi_list",
+                                     choices = as.list(address_list$address),
+                                     selected = as.list(current_list$address))(session = session,
+                                                                               inputId = "multi_list",
+                                                                               choices = as.list(address_list$address),
+                                                                               selected = as.list(current_list$address))
       updateSelectInput(session = session,
                         inputId = "address_select",                 
                         choices = c("New Email Address", as.list(address_list$address)),

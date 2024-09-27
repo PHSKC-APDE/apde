@@ -1,17 +1,28 @@
-#### FUNCTION TO COMPARE EXTERNAL TABLE TO SOURCE TABLE TO FIND CHANGES
-
-#### PARAMETERS ####
-# conn = name of the connection to the SQL database with source table
-# db = name of database/data warehouse for source table, must be inthealth_edw or inthealth_dwhealth
-# schema = name of schema for source table
-# table = name of source table
-# conn_ext = name of the connection to the SQL database with source external
-# db_ext = name of database/data warehouse for external table
-# schema_ext = name of schema for external table
-# table_ext = name of external table
-# sql_display = show the SQL script in Console
-# sql_file_path = write the SQL script to file
-# overwrite = overwrite sql script, appends if FALSE
+#' @title Compare external table to source table to find changes
+#' 
+#' @param conn SQL server connection created using \code{odbc} package
+#' @param db name of database/data warehouse for source table, must be inthealth_edw or inthealth_dwhealth
+#' @param schema name of schema for source table
+#' @param table name of source table
+#' @param conn_ext name of the connection to the SQL database with source external
+#' @param db_ext name of database/data warehouse for external table
+#' @param schema_ext name of schema for external table
+#' @param table_ext name of external table
+#' @param sql_display show the SQL script in Console
+#' @param sql_file_path write the SQL script to file
+#' @param overwrite overwrite sql script, appends if FALSE
+#' 
+#' @importFrom DBI dbGetQuery SQL
+#' @importFrom dplyr all_equal
+#' @importFrom glue glue glue_collapse glue_sql
+#' 
+#' @export
+#'
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
+#'  
 
 #### FUNCTION ####
 external_table_check_f <- function(conn,

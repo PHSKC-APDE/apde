@@ -61,26 +61,26 @@
 #' @param conn SQL server connection created using \code{odbc} package.
 #' @param server Name of server being used (only applies if using a YAML file). 
 #' Useful if the same table is loaded to multiple servers but with different names 
-#' or schema. Note that this is different from the *server_path* argument that is 
-#' used as part of the BCP command; the *server* argument can be any name a user 
-#' wants whereas *server_path* must be the actual server name.
+#' or schema. Note that this is different from the \code{server_path} argument that is 
+#' used as part of the BCP command; the \code{server} argument can be any name a user 
+#' wants whereas \code{server_path} must be the actual server name.
 #' @param overall Load a single table instead of a table for each calendar year. 
-#' Mutually exclusive with *ind_yr* option. Default is TRUE.
+#' Mutually exclusive with \code{ind_yr} option. Default is \code{TRUE}.
 #' @param ind_yr Load multiple tables, one for each calendar year, with a year suffix 
-#' on each table name (e.g., mcaid_elig_2014). Mutually exclusive with *overall* option. 
-#' If using this option, the list of years should be provided via the *years* argument or 
-#' a *years* variable in the YAML file. Default is FALSE.
+#' on each table name (e.g., mcaid_elig_2014). Mutually exclusive with \code{overall} option. 
+#' If using this option, the list of years should be provided via the \code{years} argument or 
+#' a \code{years} variable in the YAML file. Default is \code{FALSE}.
 #' @param years Vector of individual years to make tables for (if not using YAML input).
 #' @param combine_yr Union year-specific files into a single table. Only applies 
-#' if ind_yr = T. Default is FALSE.
+#' if ind_yr = T. Default is \code{FALSE}.
 #' @param config Name of object in global environment that contains configuration 
 #' information. Use one of `config`, `config_url`, or `config_file`. 
 #' Should be in a YAML format with at least the following variables: 
-#' *to_schema*, *to_table*, *server_path*, *db_name*, and *file_path*, with possibly 
-#' *field_term*, *row_term*, and *first_row*. 
-#' *to_schema* and *to_table*, *server_path*, and *db_name* should all be nested under 
-#' the server name if applicable, other variables should not (but might be nested 
-#' under a calendar year).
+#' \code{to_schema}, \code{to_table}, \code{server_path}, \code{db_name}, and \code{file_path}, 
+#' with possibly \code{field_term}, \code{row_term}, and \code{first_row}. 
+#' \code{to_schema} and \code{to_table}, \code{server_path}, and \code{db_name} 
+#' should all be nested under the server name if applicable, other variables 
+#' should not (but might be nested under a calendar year).
 #' @param config_url URL of a YAML config file. Use one of `config`, `config_url`, or 
 #' `config_file`. Note the requirements under `config`.
 #' @param config_file File path of a YAML config file. Use one of `config`, `config_url`, or 
@@ -90,37 +90,44 @@
 #' @param server_path Name of the SQL server to connect to (if not using YAML input).
 #' If using Azure, only seems to work if you specify an existing DSN connection.
 #' @param db_name Name of the database to use (if not using YAML input).
-#' @param azure Flag to indicate data are being loaded to an Azure SQL server. Default is FALSE.
+#' @param azure Flag to indicate data are being loaded to an Azure SQL server. Default is \code{FALSE}.
 #' @param azure_uid Username for connecting to Azure Active Directory. Only use if azure = T.
 #' @param azure_pwd Password for connecting to Azure Active Directory. Only use if azure = T.
 #' @param file_path File path of data to be loaded (if not using YAML input). If 
 #' ind_yr = T, this should be a named vector with the format 
-#' *c("2014" = "//path1/folder1/file1.ext", "2015" = "//path1/folder1/file2.ext")* 
+#' \code{c("2014" = "//path1/folder1/file1.ext", "2015" = "//path1/folder1/file2.ext")} 
 #' where the name matches the years to load.
 #' @param field_term Field terminator in the data (if not using YAML input). If 
 #' using ind_yr = T and the terminator differs between calendar years, this should 
-#' be a named vector with the format *c("overall" = "\t", "2014" = "\|", "2016" = "\0")* 
+#' be a named vector with the format \code{c("overall" = "\t", "2014" = "\|", "2016" = "\0")} 
 #' where "overall" supplies the default terminator and the other names match the years 
 #' that differ. Do not use a named vector if overall = T or if there is no variation 
-#' between years. The BCP default is \\t.
+#' between years. The BCP default is \code{\\t}.
 #' @param row_term Row terminator in the data (if not using YAML input). If 
 #' using ind_yr = T and the terminator differs between calendar years, this should 
-#' be a named vector with the format *c("overall" = "\n", "2014" = "\r", "2016" = "\0")* 
+#' be a named vector with the format \code{c("overall" = "\n", "2014" = "\r", "2016" = "\0")} 
 #' where "overall" supplies the default terminator and the other names match the years 
 #' that differ. Do not use a named vector if overall = T or if there is no variation 
-#' between years. The BCP default is \\n.
+#' between years. The BCP default is \code{\\n}.
 #' @param first_row Row number of the first line of data (if not using YAML input). 
-#' Default is 2 (assumes a header row). Currently this must be the same for all years.
-#' @param truncate Truncate existing table prior to loading. Default is TRUE. 
+#' Default is \code{2} (assumes a header row). Currently this must be the same for all years.
+#' @param truncate Truncate existing table prior to loading. Default is \code{TRUE}. 
 #' @param drop_index Drop any existing indices prior to loading data. This can speed 
-#' loading times substantially. Use \code{add_index} to restore the index after. Default is TRUE.
+#' loading times substantially. Use \code{add_index} to restore the index after. Default is \code{TRUE}.
+#' @param tablock Logical (\code{TRUE} | \code{FALSE}). Lock the entire table for duration of 
+#' loading process to improve performance. Default is \code{FALSE}.
 #' @param test_schema Write to a temporary/development schema when testing out table creation. 
 #' Will use the to_schema (specified or in the YAML file) to make a new table name of  
-#' {to_schema}_{to_table}. Schema must already exist in the database. Most useful 
+#' \{to_schema\}_\{to_table\}. Schema must already exist in the database. Most useful 
 #' when the user has an existing YAML file and does not want to overwrite it. 
-#' Only 1,000 rows will be loaded to each table. Default is NULL.
+#' Only 1,000 rows will be loaded to each table. Default is \code{NULL}.
 #' @param use_sys If the sys package is installed, use this to call BCP and see a more 
-#' informative interface in the R console. Helpful for debugging when BSP doesn't work. Default is FALSE.
+#' informative interface in the R console. Helpful for debugging when BSP doesn't work. 
+#' Default is \code{FALSE}.
+#'
+#' @importFrom DBI dbGetQuery dbQuoteString 
+#' @importFrom glue glue
+#' @importFrom sys exec_wait
 #'
 #' @examples
 #' \dontrun{
@@ -159,6 +166,8 @@ load_table_from_file <- function(conn,
                                  test_schema = NULL,
                                  use_sys = F) {
   
+  # Set visible bindings for global variables
+  conn_inner <- NULL
   
   # INITIAL ERROR CHECK ----
   # Check if the config provided is a local file or on a webpage

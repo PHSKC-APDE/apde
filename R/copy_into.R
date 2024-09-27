@@ -1,20 +1,58 @@
-#### FUNCTION TO COPY DATA FROM THE DATA LAKE TO THE DATA WAREHOUSE
-# Alastair Matheson
-# Created:        2019-04-04
+#' @title Copy Data from the Data Lake to the Data Warehouse
+#'
+#' @description
+#' This function copies data from the data lake to the data warehouse.
+#'
+#' @author Alastair Matheson, 2019-04-04
+#'
+#' @details
+#' Plans for future improvements:
+#' - Add warning when table is about to be overwritten.
+#' - Add other options for things we're not using (e.g., file_format).
+#'
+#' @param conn SQL server connection created using \code{odbc} package
+#' @param server server name, i.e., 'hhsaw' or 'phclaims'
+#' @param config A object in memory with the YAML config file contents (should be blank if using config_url or config_file)
+#' @param config_url The URL location of the YAML config file (should be blank if using config or config_file).
+#' @param config_file The path and file name of the YAML config file (should be blank if using config or config_url).
+#' @param to_schema schema name
+#' @param to_table table name
+#' @param db_name database name, e.g., "hhs_analytics_workspace", "inthealth_edw", etc.
+#' @param dl_path The path to the data lake where the source files are located.
+#' @param file_type file type, i.e., "csv", "parquet", or "orc".
+#' @param identity The identity (username or account name) used for authentication when accessing the data lake.
+#' @param secret The secret key or password associated with the identity for authentication.
+#' @param max_errors The total number of records that can be rejected before entire file will be rejected by the system.
+#' @param compression compression used, i.e., "none", "gzip", "defaultcodec", or "snappy".
+#' @param field_quote The character used to quote fields in the input file (e.g., double quotes). Default is \code{field_quote = ""}
+#' @param field_term The character or string used to separate fields in the input file (e.g., comma for CSV).
+#' @param row_term The character or string used to separate rows in the input file (e.g., newline character).
+#' @param first_row The row number where data begins in the input file (excluding headers if present).
+#' @param overwrite Logical; if TRUE, truncate the table first before creating it, if it exists (default is \code{TRUE}).
+#' @param rodbc Logical; if TRUE, use the RODBC package to run the query (avoids encoding error if using a secret key).
+#' @param rodbc_dsn The DSN name of the RODBC connection to use with RODBC (only need to set if not using prod server).
+#'
+#' @return None
+#' 
+#' @note
+#' Plans future improvement:
+#' \itemize{
+#'  \item Add warning when table is about to be overwritten
+#'  \item Add in other options for things we're not using (e.g., file_format)
+#' }
+#' 
+#' @importFrom DBI dbExecute dbExistsTable Id SQL
+#' @importFrom RODBC odbcConnect sqlQuery odbcClose
+#' @importFrom yaml yaml.load read_yaml
+#' 
+#' @export
+#'
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
+#'
 
-
-### Plans for future improvements:
-# Add warning when table is about to be overwritten
-# Add in other options for things we're not using (e.g., file_format)
-
-
-#### PARAMETERS ####
-# conn = name of the connection to the SQL database
-# config_url = URL location of YAML config file (should be blank if using config_file)
-# config_file = path + file name of YAML config file (should be blank if using config_url)
-# overwrite = truncate table first before creating it, if it exists (default is TRUE)
-# rodbc = if wanting to use RODBC package to run query (avoids encoding error if using a secret key)
-# rodbc_dsn = dsn name of rodbc connection to use with rodbc (only need to set if not using prod server)
 
 #### FUNCTION ####
 copy_into_f <- function(conn,
@@ -38,7 +76,6 @@ copy_into_f <- function(conn,
                         overwrite = T,
                         rodbc = F,
                         rodbc_dsn = "int_edw_16") {
-  
   
   #### SET UP SERVER ####
   if (is.null(server)) {

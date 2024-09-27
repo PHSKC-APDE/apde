@@ -102,7 +102,7 @@
 #' Should take the format *list("2014" = c("DUAL_ELIG" = "VARCHAR(255)", "TPL_FULL_FLAG" = "VARCHAR(255)"), "2016" = c("SECONDARY_RAC_CODE" = "INTEGER", "SECONDARY_RAC_NAME" = "VARCHAR(255)"))* where the name matches the years to load..
 #' @param test_schema Use a temporary/development schema to test out table creation. 
 #' Will use the to_schema (specified or in the YAML file) to make a new table name of  
-#' {to_schema}_{to_table}. Schema must already exist in the database. Most useful 
+#' \{to_schema\}_\{to_table\}. Schema must already exist in the database. Most useful 
 #' when the user has an existing YAML file and does not want to overwrite it. Default is NULL.
 #'
 #' @examples

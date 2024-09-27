@@ -86,7 +86,7 @@ Should take the format \emph{list("2014" = c("DUAL_ELIG" = "VARCHAR(255)", "TPL_
 
 \item{test_schema}{Use a temporary/development schema to test out table creation.
 Will use the to_schema (specified or in the YAML file) to make a new table name of
-{to_schema}_{to_table}. Schema must already exist in the database. Most useful
+\{to_schema\}_\{to_table\}. Schema must already exist in the database. Most useful
 when the user has an existing YAML file and does not want to overwrite it. Default is NULL.}
 }
 \description{
@@ -100,7 +100,9 @@ specified or come from a YAML file, the hierarchy is
 specified > argument under server in YAML > argument not under server in YAML.
 \subsection{Example YAML file with no server or individual years}{
 
-(Assume the indentation is appropriate)\preformatted{to_schema: raw
+(Assume the indentation is appropriate)
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{to_schema: raw
 to_table: mcaid_elig
 *optional other components like a qa_schema and qa_table, file path to data, index name, etc.*
 vars:
@@ -112,12 +114,14 @@ vars:
     RPRTBL_BSP_GROUP_NAME: VARCHAR(255)
     FROM_DATE: DATE
     TO_DATE: DATE
-}
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Example YAML file with servers (phclaims, hhsaw) and individual years}{
 
-(Assume the indentation is appropriate)\preformatted{phclaims:
+(Assume the indentation is appropriate)
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{phclaims:
     to_schema: raw
     to_table: mcaid_elig
 hhsaw:
@@ -145,7 +149,7 @@ years:
     vars:
         SECONDARY_RAC_CODE: INTEGER
         SECONDARY_RAC_NAME: VARCHAR(255)
-}
+}\if{html}{\out{</div>}}
 }
 }
 \examples{
