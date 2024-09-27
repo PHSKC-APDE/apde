@@ -37,11 +37,13 @@ An S3 object of class "qa_data_config", which is a list containing the configura
 }
 \description{
 This function creates a configuration object for the ETL QA pipeline based on 
-the provided parameters. Called upon by \code{\link{etl_qa_run_pipeline}}.
+the provided parameters. It is the first step called upon by 
+\code{\link{etl_qa_run_pipeline}}.
 }
 \details{
-The arguments are identical to those used by \code{\link{etl_qa_run_pipeline}}. 
-Please review that helpful for details.
+This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+\code{apde:::etl_qa_setup_config(...)}. The arguments are identical to those used 
+by \code{\link{etl_qa_run_pipeline}}. Please review that helpful for details.
 }
 \examples{
 \dontrun{

@@ -21,6 +21,10 @@ A list the file paths for the exported data:
 This function exports Excel tables and PDF plots of ETL QA results. It is the 
 fourth and final step run by \code{\link{etl_qa_run_pipeline}}.
 }
+\details{
+This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+\code{apde:::etl_qa_export_results(...)}.
+}
 \examples{
 \dontrun{
 

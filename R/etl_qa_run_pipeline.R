@@ -322,7 +322,7 @@ etl_qa_run_pipeline <- function(data_source_type,
 # Tiny helper function ----
 #' @title Helper function to provide a default value for NULL
 #'
-#' @description#' 
+#' @description 
 #' This infix function returns the first argument if it's not NULL,
 #' otherwise it returns the second argument.
 #'
@@ -346,6 +346,8 @@ etl_qa_run_pipeline <- function(data_source_type,
 #' f("value") # Returns "value"
 #'
 #' @keywords internal
+#' @noRd
+#' 
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
 #--------------------------------- ----
@@ -356,7 +358,8 @@ etl_qa_run_pipeline <- function(data_source_type,
 #'
 #' @description
 #' This function creates a configuration object for the ETL QA pipeline based on 
-#' the provided parameters. Called upon by \code{\link{etl_qa_run_pipeline}}.
+#' the provided parameters. It is the first step called upon by 
+#' \code{\link{etl_qa_run_pipeline}}.
 #'
 #' @param data_source_type Character string specifying the type of data source
 #' @param connection A DBIConnection object for SQL Server connections
@@ -368,8 +371,9 @@ etl_qa_run_pipeline <- function(data_source_type,
 #' @param rel_threshold Numeric threshold for flagging relative changes
 #'
 #' @details
-#' The arguments are identical to those used by \code{\link{etl_qa_run_pipeline}}. 
-#' Please review that helpful for details.  
+#' This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+#' \code{apde:::etl_qa_setup_config(...)}. The arguments are identical to those used 
+#' by \code{\link{etl_qa_run_pipeline}}. Please review that helpful for details.  
 #'
 #' @return An S3 object of class "qa_data_config", which is a list containing the configuration settings.
 #'
@@ -558,6 +562,10 @@ etl_qa_setup_config <- function(data_source_type,
 #' This function performs the core analysis for the ETL QA pipeline, processing 
 #' data based on the provided configuration. It is the second step run by 
 #' \code{\link{etl_qa_run_pipeline}}.
+#' 
+#' @details
+#' This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+#' \code{apde:::etl_qa_initial_results(...)}. 
 #'
 #' @param config An S3 object of class "qa_data_config" containing configuration settings.
 #'
@@ -634,7 +642,10 @@ etl_qa_initial_results <- function(config) {
 # process_r_dataframe() - Function to process data.tables / data.frames ----
 #' Process R dataframe for ETL QA
 #' 
+#' Used by `etl_qa_initial_results()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom data.table setDT melt setnames setorderv data.table rbindlist
 #' @importFrom knitr kable
@@ -795,7 +806,10 @@ process_r_dataframe <- function(config) {
 # process_rads_data() - Function to process rads::get_data_xxx() ----
 #' Process RADS data for ETL QA
 #' 
+#' Used by `etl_qa_initial_results()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom data.table setDT 
 #' @importFrom utils getFromNamespace
@@ -853,7 +867,10 @@ process_rads_data <- function(config) {
 # process_sql_server() - Function to process data on SQL Server ----
 #' Process SQL Server data for ETL QA
 #' 
+#' used by `etl_qa_initial_results()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom data.table setDT data.table
 #' @importFrom DBI dbGetQuery Id dbExistsTable
@@ -979,7 +996,10 @@ process_sql_server <- function(config) {
 ## comp_2_chi_std() ----
 #' Compare data to CHI standards in rads.data::misc_chi_byvars
 #' 
+#' `used by process_sql_server()` & 'process_r_dataframe()'
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom data.table setorder ":="
 #' @importFrom knitr kable
@@ -1032,7 +1052,10 @@ comp_2_chi_std <- function(myCHIcomparison){
 ## keep_top_8() ----
 #' Keep top 8 most frequent categorical values
 #' 
+#' `used by process_sql_server()` & 'process_r_dataframe()'
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom data.table copy frankv data.table
 #' 
@@ -1060,7 +1083,10 @@ keep_top_8 <- function(categorical_freq, config){
 ## split_column_types() ----
 #' Split column types for SQL Server data into categorical, numeric, and date
 #' 
+#' Used by `process_sql_server()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom data.table setDT
 #' @importFrom DBI dbGetQuery
@@ -1158,7 +1184,10 @@ split_column_types <- function(config) {
 ## generate_missing_query() ----
 #' Generate SQL query to create table of missing data
 #' 
+#' Used by `process_sql_server()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom glue glue
 #'  
@@ -1202,7 +1231,10 @@ generate_missing_query <- function(config) {
 ## generate_numeric_query() ----
 #' Generate SQL query for numeric statistics
 #' 
+#' Used by `process_sql_server()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom glue glue
 #'  
@@ -1308,7 +1340,10 @@ generate_numeric_query <- function(config) {
 ## generate_date_query() ----
 #' Generate SQL query for date / datetime statistics
 #' 
+#' Used by `process_sql_server()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom glue glue
 #'  
@@ -1418,7 +1453,10 @@ generate_date_query <- function(config) {
 ## generate_categorical_query() ----
 #' Generate SQL query for categorical frequency table
 #' 
+#' Used by `process_sql_server()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @importFrom glue glue
 #'  
@@ -1472,6 +1510,10 @@ generate_categorical_query <- function(config) {
 #' This function processes the initial results from \code{\link{etl_qa_initial_results}} 
 #' into a format suitable for reporting and visualization. It is the third step 
 #' run by \code{\link{etl_qa_run_pipeline}}.
+#'
+#' @details
+#' This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+#' \code{apde:::etl_qa_final_results(...)}.
 #'
 #' @param initial_qa_results A list containing the initial QA results.
 #' @param config An S3 object of class "qa_data_config" containing configuration settings.
@@ -1624,6 +1666,10 @@ etl_qa_final_results <- function(initial_qa_results, config) {
 #' This function exports Excel tables and PDF plots of ETL QA results. It is the 
 #' fourth and final step run by \code{\link{etl_qa_run_pipeline}}.
 #'
+#' @details
+#' This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+#' \code{apde:::etl_qa_export_results(...)}.
+#'
 #' @param qa_results A list containing the processed QA results from \code{etl_qa_final_results()}
 #' @param config An S3 object of class "qa_data_config" containing configuration settings.
 #'
@@ -1753,7 +1799,10 @@ etl_qa_export_results <- function(qa_results, config) {
 ## plotCATEGORICAL() ----
 #' Plot categorical data
 #' 
+#' Used by `etl_qa_export_results()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @import ggplot2
 #' @importFrom scales hue_pal
@@ -1792,7 +1841,10 @@ plotCATEGORICAL <- function(var_data, time_var, mytitle) {
 ## plotCONTINUOUS() ----
 #' Plot continuous data
 #' 
+#' Used by `etl_qa_export_results()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @import ggplot2
 #' 
@@ -1826,7 +1878,10 @@ plotCONTINUOUS <- function(var_data, time_var, mytitle) {
 ## plotDATE() ----
 #' Plot date data
 #' 
+#' Used by `etl_qa_export_results()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @import ggplot2
 #' 
@@ -1861,7 +1916,10 @@ plotDATE <- function(var_data, time_var, mytitle) {
 ## plotMISSING() ----
 #' Plot missing data
 #' 
+#' Used by `etl_qa_export_results()`
+#' 
 #' @keywords internal
+#' @noRd
 #' 
 #' @import ggplot2
 #' @importFrom scales percent_format

@@ -24,6 +24,10 @@ This function performs the core analysis for the ETL QA pipeline, processing
 data based on the provided configuration. It is the second step run by 
 \code{\link{etl_qa_run_pipeline}}.
 }
+\details{
+This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+\code{apde:::etl_qa_initial_results(...)}.
+}
 \examples{
 \dontrun{
 
