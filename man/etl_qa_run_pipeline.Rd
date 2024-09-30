@@ -5,22 +5,22 @@
 \title{Run ETL Quality Assurance Pipeline}
 \usage{
 etl_qa_run_pipeline(
-  data_source_type,
   connection = NULL,
+  data_source_type,
   data_params = list(),
   output_directory = NULL,
-  digits_mean = 0,
+  digits_mean = 3,
   digits_prop = 3,
   abs_threshold = 3,
   rel_threshold = 2
 )
 }
 \arguments{
-\item{data_source_type}{Character string specifying the type of data source. 
-Must be one of \code{'r_dataframe'}, \code{'sql_server'}, or \code{'rads'}.}
-
 \item{connection}{A DBIConnection object. \emph{Required only when 
 \code{data_source_type = 'sql_server'}}}
+
+\item{data_source_type}{Character string specifying the type of data source. 
+Must be one of \code{'r_dataframe'}, \code{'sql_server'}, or \code{'rads'}.}
 
 \item{data_params}{List of data related parameters specific to the data source. Not all 
 parameters are needed for all data sources. Please review the examples for details. 
@@ -32,16 +32,17 @@ parameters are needed for all data sources. Please review the examples for detai
   \code{rads.data::misc_chi_byvars}. Default is \code{FALSE}
   
   \item \code{cols}: Character vector specifying the column names to analyze, 
-  e.g., \code{c('race4', 'birth_weight_grams', 'birthplace_city')}
+  e.g., \code{cols = c('race4', 'birth_weight_grams', 'birthplace_city')}
   
   \item \code{time_range}: Character vector of length 2 specifying the start 
   and end of the time range, e.g., \code{time_range = c(2015, 2024)}
   
   \item \code{time_var}: Character string specifying the time interval variable, 
-  e.g., \code{'chi_year'}
+  e.g., \code{time_var = 'chi_year'}
   
   \item \code{data}: Name of a data.frame or data.table that you want to assess 
-  with this function. \emph{Required only when \code{data_source_type = 'r_dataframe'}}.
+  with this function, e.g., `data = myDataTable`. \emph{Required only when 
+  \code{data_source_type = 'r_dataframe'}}.
   
   \item \code{function_name}: Character string specifying the relevant 
   \code{rads::get_data_xxx} function, e.g., \code{function_name = 'get_data_birth'}. 
@@ -49,11 +50,11 @@ parameters are needed for all data sources. Please review the examples for detai
   
   \item \code{kingco}: Logical vector of length 1. Identifies whether you want 
   limit the data to King County. \emph{Required only when 
-  \code{data_source_type = 'rads'}}. Default is \code{TRUE}
+  \code{data_source_type = 'rads'}}. Default is \code{kingco = TRUE}
   
   \item \code{version}: Character string specifying either \code{'final'} or 
-  \code{'stage'}. \emph{Only necessary when \code{data_source_type = 'rads'}}. 
-  Default is \code{'stage'}
+  \code{'stage'}. \emph{Required only when \code{data_source_type = 'rads'}}. 
+  Default is \code{version = 'stage'}
   
   \item \code{schema_table}: The name of the schema and table to be accessed 
   within the SQL Server \code{connection}. Must be in the form 
@@ -62,19 +63,20 @@ parameters are needed for all data sources. Please review the examples for detai
  }}
 
 \item{output_directory}{Character string specifying the directory where output 
-files will be saved. If \code{NULL}, the current working directory is used.}
+files will be saved. If \code{NULL}, the current working directory is used. 
+Default is \code{output_directory = NULL}.}
 
 \item{digits_mean}{Integer specifying the number of decimal places for rounding 
-the reported mean, median, min, and max. Default is \code{0}.}
+the reported mean, median, min, and max. Default is \code{digits_mean = 3}.}
 
 \item{digits_prop}{Integer specifying the number of decimal places for rounding 
-proportions. Default is \code{3}.}
+proportions. Default is \code{digits_prop = 3}.}
 
 \item{abs_threshold}{Numeric threshold for flagging absolute percentage changes 
-in proportions. Permissible range is [0, 100]. Default is \code{3}.}
+in proportions. Permissible range is [0, 100]. Default is \code{abs_threshold = 3}.}
 
 \item{rel_threshold}{Numeric threshold for flagging relative percentage changes 
-in means and medians. Permissible range is [0, 100]. Default is \code{2}.}
+in means and medians. Permissible range is [0, 100]. Default is \code{rel_threshold = 2}.}
 }
 \value{
 A list containing the final results from the ETL QA pipeline. Specifically, it includes:
@@ -117,12 +119,14 @@ qa.rads <- etl_qa_run_pipeline(
 
 
 # Example with R dataframe
-birth_data <- get_data_birth(year = c(2021:2022), 
-                             kingco = F, 
-                             cols = c('chi_age', 'race4', 'birth_weight_grams', 
-                             'birthplace_city', 'num_prev_cesarean', 
-                             'chi_year', 'mother_date_of_birth'), 
-)
+birth_data <- rads::get_data_birth(year = c(2021:2022), 
+                                   kingco = F, 
+                                   cols = c('chi_age', 'race4', 
+                                   'birth_weight_grams', 'birthplace_city', 
+                                   'num_prev_cesarean', 'chi_year', 
+                                   'mother_date_of_birth'), 
+                                   version = 'final')
+                                   
 qa.df <- etl_qa_run_pipeline(
   data_source_type = 'r_dataframe',
   data_params = list(
@@ -155,8 +159,8 @@ qa.sql <- etl_qa_run_pipeline(
 )
 
 # Confirmation that the results are identical
-identical(qa.rads$final, qa.df$final)
-identical(qa.rads$final, qa.sql$final)
+all.equal(qa.rads$final, qa.df$final)
+all.equal(qa.rads$final, qa.sql$final)
 
 }
 
