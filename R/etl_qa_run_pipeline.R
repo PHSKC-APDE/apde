@@ -988,23 +988,29 @@ process_sql_server <- function(config) {
   }
   
   # Make sure have records for each year (even when the variable did not exist in that year) ----
+  if(length(unique(vals_date$varname)) > 0){
     vals_date <- merge(
       setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_date$varname)), c(config$time_var, 'varname')), 
       vals_date, 
       by = c(config$time_var, 'varname'), 
       all = T)
-  
+  }
+
+  if(length(unique(vals_continuous$varname)) > 0){
   vals_continuous <- merge(
     setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_continuous$varname)), c(config$time_var, 'varname')), 
     vals_continuous, 
     by = c(config$time_var, 'varname'), 
     all = T)
+  }
   
+  if(length(unique(vals_categorical$varname)) > 0){
   vals_categorical <- merge(
-    setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_categorical$varname)), c(config$time_var, 'varname')), 
-    vals_categorical, 
-    by = c(config$time_var, 'varname'), 
+    setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_categorical$varname)), c(config$time_var, 'varname')),
+    vals_categorical,
+    by = c(config$time_var, 'varname'),
     all = T)
+  }
   
   # Create list for export ----
   list(missing_data = missing_data,
