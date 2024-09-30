@@ -21,16 +21,17 @@
 #'   \code{rads.data::misc_chi_byvars}. Default is \code{FALSE}
 #'   
 #'   \item \code{cols}: Character vector specifying the column names to analyze, 
-#'   e.g., \code{c('race4', 'birth_weight_grams', 'birthplace_city')}
+#'   e.g., \code{cols = c('race4', 'birth_weight_grams', 'birthplace_city')}
 #'   
 #'   \item \code{time_range}: Character vector of length 2 specifying the start 
 #'   and end of the time range, e.g., \code{time_range = c(2015, 2024)}
 #'   
 #'   \item \code{time_var}: Character string specifying the time interval variable, 
-#'   e.g., \code{'chi_year'}
+#'   e.g., \code{time_var = 'chi_year'}
 #'   
 #'   \item \code{data}: Name of a data.frame or data.table that you want to assess 
-#'   with this function. \emph{Required only when \code{data_source_type = 'r_dataframe'}}.
+#'   with this function, e.g., `data = myDataTable`. \emph{Required only when 
+#'   \code{data_source_type = 'r_dataframe'}}.
 #'   
 #'   \item \code{function_name}: Character string specifying the relevant 
 #'   \code{rads::get_data_xxx} function, e.g., \code{function_name = 'get_data_birth'}. 
@@ -38,11 +39,11 @@
 #'   
 #'   \item \code{kingco}: Logical vector of length 1. Identifies whether you want 
 #'   limit the data to King County. \emph{Required only when 
-#'   \code{data_source_type = 'rads'}}. Default is \code{TRUE}
+#'   \code{data_source_type = 'rads'}}. Default is \code{kingco = TRUE}
 #'   
 #'   \item \code{version}: Character string specifying either \code{'final'} or 
-#'   \code{'stage'}. \emph{Only necessary when \code{data_source_type = 'rads'}}. 
-#'   Default is \code{'stage'}
+#'   \code{'stage'}. \emph{Required only when \code{data_source_type = 'rads'}}. 
+#'   Default is \code{version = 'stage'}
 #'   
 #'   \item \code{schema_table}: The name of the schema and table to be accessed 
 #'   within the SQL Server \code{connection}. Must be in the form 
@@ -51,15 +52,16 @@
 #'  }
 #'   
 #' @param output_directory Character string specifying the directory where output 
-#' files will be saved. If \code{NULL}, the current working directory is used.
+#' files will be saved. If \code{NULL}, the current working directory is used. 
+#' Default is \code{output_directory = NULL}.
 #' @param digits_mean Integer specifying the number of decimal places for rounding 
-#' the reported mean, median, min, and max. Default is \code{0}.
+#' the reported mean, median, min, and max. Default is \code{digits_mean = 3}.
 #' @param digits_prop Integer specifying the number of decimal places for rounding 
-#' proportions. Default is \code{3}.
+#' proportions. Default is \code{digits_prop = 3}.
 #' @param abs_threshold Numeric threshold for flagging absolute percentage changes 
-#' in proportions. Permissible range is [0, 100]. Default is \code{3}.
+#' in proportions. Permissible range is [0, 100]. Default is \code{abs_threshold = 3}.
 #' @param rel_threshold Numeric threshold for flagging relative percentage changes 
-#' in means and medians. Permissible range is [0, 100]. Default is \code{2}.
+#' in means and medians. Permissible range is [0, 100]. Default is \code{rel_threshold = 2}.
 #'
 #' @return A list containing the final results from the ETL QA pipeline. Specifically, it includes:
 #'   \item{config}{Configuration settings used for the analysis}
@@ -105,12 +107,14 @@
 #' 
 #' 
 #' # Example with R dataframe
-#' birth_data <- get_data_birth(year = c(2021:2022), 
-#'                              kingco = F, 
-#'                              cols = c('chi_age', 'race4', 'birth_weight_grams', 
-#'                              'birthplace_city', 'num_prev_cesarean', 
-#'                              'chi_year', 'mother_date_of_birth'), 
-#' )
+#' birth_data <- rads::get_data_birth(year = c(2021:2022), 
+#'                                    kingco = F, 
+#'                                    cols = c('chi_age', 'race4', 
+#'                                    'birth_weight_grams', 'birthplace_city', 
+#'                                    'num_prev_cesarean', 'chi_year', 
+#'                                    'mother_date_of_birth'), 
+#'                                    version = 'final')
+#'                                    
 #' qa.df <- etl_qa_run_pipeline(
 #'   data_source_type = 'r_dataframe',
 #'   data_params = list(
@@ -143,18 +147,18 @@
 #' )
 #' 
 #' # Confirmation that the results are identical
-#' identical(qa.rads$final, qa.df$final)
-#' identical(qa.rads$final, qa.sql$final)
+#' all.equal(qa.rads$final, qa.df$final)
+#' all.equal(qa.rads$final, qa.sql$final)
 #' 
 #' }
 #' 
 #' @importFrom data.table setDT
 #' 
-etl_qa_run_pipeline <- function(data_source_type,
-                                connection = NULL,
+etl_qa_run_pipeline <- function(connection = NULL,
+                                data_source_type,
                                 data_params = list(), 
                                 output_directory = NULL,
-                                digits_mean = 0,
+                                digits_mean = 3,
                                 digits_prop = 3,
                                 abs_threshold = 3,
                                 rel_threshold = 2) {
@@ -872,7 +876,7 @@ process_rads_data <- function(config) {
 #' @keywords internal
 #' @noRd
 #' 
-#' @importFrom data.table setDT data.table
+#' @importFrom data.table setDT data.table CJ
 #' @importFrom DBI dbGetQuery Id dbExistsTable
 #' @importFrom glue glue
 #' @importFrom knitr kable
@@ -983,6 +987,24 @@ process_sql_server <- function(config) {
     chi_std_comparison = data.table() # create a data.table with zero columns and zero rows, just to have a data.table object so rest of code will work
   }
   
+  # Make sure have records for each year (even when the variable did not exist in that year) ----
+    vals_date <- merge(
+      setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_date$varname)), c(config$time_var, 'varname')), 
+      vals_date, 
+      by = c(config$time_var, 'varname'), 
+      all = T)
+  
+  vals_continuous <- merge(
+    setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_continuous$varname)), c(config$time_var, 'varname')), 
+    vals_continuous, 
+    by = c(config$time_var, 'varname'), 
+    all = T)
+  
+  vals_categorical <- merge(
+    setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_categorical$varname)), c(config$time_var, 'varname')), 
+    vals_categorical, 
+    by = c(config$time_var, 'varname'), 
+    all = T)
   
   # Create list for export ----
   list(missing_data = missing_data,
@@ -1558,7 +1580,7 @@ generate_categorical_query <- function(config) {
 #'
 #' @keywords internal
 #' 
-#' @importFrom data.table setnames setorderv ":=" fifelse shift
+#' @importFrom data.table setnames setorderv ":=" fifelse shift setkey
 #' @importFrom rads round2
 #' 
 etl_qa_final_results <- function(initial_qa_results, config) {
@@ -1650,9 +1672,9 @@ etl_qa_final_results <- function(initial_qa_results, config) {
   
   # Return results as a list ----
   return(list(
-    missingness = missing_data,
-    values = values, 
-    chi_standards = chi_standards
+    missingness = setkey(missing_data, NULL),
+    values = setkey(values, NULL),
+    chi_standards = setkey(chi_standards, NULL)
   ))
 }
 
