@@ -37,7 +37,7 @@ Imports:
     sys,
     yaml
 Remotes:
-    github::PHSKC-APDE/rads.data; github::PHSKC-APDE/rads
+    github::PHSKC-APDE/rads.data, github::PHSKC-APDE/rads
 Suggests: 
     testthat
 VignetteBuilder: 
