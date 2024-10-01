@@ -208,7 +208,7 @@ etl_qa_run_pipeline <- function(connection = NULL,
     stop("\U0001f47f\nYou must specify the 'data_params$cols' argument when data_params$check_chi is FALSE or not provided.")
   } else if ((!'cols' %in% names(data_params) || is.null(data_params$cols) ) & isTRUE(data_params$check_chi)){
     warning("\U00026A0\nYou did not specify the 'data_params$cols' argument. Since data_params$check_chi = TRUE, the code will run, \n", 
-    "however it might encounter an error if there are no CHI relatd variables in your data.")
+    "however it might encounter an error if there are no CHI related variables in your data.")
   }
   
   ### data_params$time_range ----
