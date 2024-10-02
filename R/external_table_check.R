@@ -96,14 +96,7 @@ external_table_check_f <- function(conn,
   }
   
   
-  # Checks if external table exists and creates drop table script
-  if(nrow(external_cols) > 0) {
-    drop_table <- glue::glue_sql("
-IF OBJECT_ID('{`schema_ext`}.{`table_ext`}') IS NOT NULL
-DROP EXTERNAL TABLE {`schema_ext`}.{`table_ext`};", .con = conn_ext)
-  } else {
-    drop_table = ""
-  }
+
   
   # Sets datasource depending on source database
   if(db == "inthealth_edw") {
@@ -114,7 +107,8 @@ DROP EXTERNAL TABLE {`schema_ext`}.{`table_ext`};", .con = conn_ext)
   
   # Create SQL script
   sql <- glue::glue_sql("
-{drop_table}
+IF OBJECT_ID('{`schema_ext`}.{`table_ext`}') IS NOT NULL
+  DROP EXTERNAL TABLE {`schema_ext`}.{`table_ext`};
 CREATE EXTERNAL TABLE {`schema_ext`}.{`table_ext`}
   ({DBI::SQL(glue::glue_collapse(glue::glue_sql('{DBI::SQL(source_cols$COLUMN_DEFINITION)}',.con = conn_ext), sep = ', \n  '))})
 WITH (DATA_SOURCE = [{DBI::SQL(data_source)}], SCHEMA_NAME = N{schema}, OBJECT_NAME = N{table});", .con = conn_ext)
