@@ -1590,8 +1590,14 @@ etl_qa_final_results <- function(initial_qa_results, config) {
   if (nrow(vals_categorical) > 0) {
     if (!is.null(vals_categorical)) {
       
+      # first create a template of all possible unique varname x value x time_period 
+      unique_values <- unique(vals_categorical[, .(varname, value)])
+      unique_values <- unique_values[, c(.SD, setNames(list(config$time_range[1]:config$time_range[2]), config$time_var)), 
+                                 by = .(varname, value)]
+      
+      # then merge the actual data onto to the template
       vals_categorical <- merge(
-        setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_categorical$varname), unique(vals_categorical$value)), c(config$time_var, 'varname', 'value')),
+        unique_values,
         vals_categorical,
         by = c(config$time_var, 'varname', 'value'),
         all = T)
@@ -1775,6 +1781,7 @@ etl_qa_export_results <- function(qa_results, config) {
       }
     } else if (plot_type == "values") {
       for (var in unique(plot_data$varname)) {
+        # message('Plotting ', var)
         var_data <- plot_data[varname == var]
         if (all(var_data$vartype == 'Categorical')) {
           myplot <- plotCATEGORICAL(var_data, time_var, mytitle)
@@ -1915,7 +1922,7 @@ plotDATE <- function(var_data, time_var, mytitle) {
   # Set visible bindings for global variables
   time_period <- min_date <- median_date <- max_date <- NULL
   
-  ggplot(var_data) +
+  ggplot(var_data[!is.na(median_date)]) +
     geom_line(aes(x = time_period, y = min_date, color = "Minimum", linetype = "Minimum"), linewidth = 2) +
     geom_line(aes(x = time_period, y = median_date, color = "Median", linetype = "Median"), linewidth = 1.5) +
     geom_line(aes(x = time_period, y = max_date, color = "Maximum", linetype = "Maximum"), linewidth = 2) +
