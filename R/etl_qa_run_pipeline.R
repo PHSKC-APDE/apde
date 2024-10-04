@@ -876,7 +876,7 @@ process_rads_data <- function(config) {
 #' @keywords internal
 #' @noRd
 #' 
-#' @importFrom data.table setDT data.table CJ
+#' @importFrom data.table setDT data.table
 #' @importFrom DBI dbGetQuery Id dbExistsTable
 #' @importFrom glue glue
 #' @importFrom knitr kable
@@ -985,31 +985,6 @@ process_sql_server <- function(config) {
     comp_2_chi_std(chi_std_comparison)
   } else {
     chi_std_comparison = data.table() # create a data.table with zero columns and zero rows, just to have a data.table object so rest of code will work
-  }
-  
-  # Make sure have records for each year (even when the variable did not exist in that year) ----
-  if(length(unique(vals_date$varname)) > 0){
-    vals_date <- merge(
-      setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_date$varname)), c(config$time_var, 'varname')), 
-      vals_date, 
-      by = c(config$time_var, 'varname'), 
-      all = T)
-  }
-
-  if(length(unique(vals_continuous$varname)) > 0){
-  vals_continuous <- merge(
-    setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_continuous$varname)), c(config$time_var, 'varname')), 
-    vals_continuous, 
-    by = c(config$time_var, 'varname'), 
-    all = T)
-  }
-  
-  if(length(unique(vals_categorical$varname)) > 0){
-  vals_categorical <- merge(
-    setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_categorical$varname)), c(config$time_var, 'varname')),
-    vals_categorical,
-    by = c(config$time_var, 'varname'),
-    all = T)
   }
   
   # Create list for export ----
@@ -1586,13 +1561,13 @@ generate_categorical_query <- function(config) {
 #'
 #' @keywords internal
 #' 
-#' @importFrom data.table setnames setorderv ":=" fifelse shift setkey
+#' @importFrom data.table setnames setorderv ":=" fifelse shift setkey CJ
 #' @importFrom rads round2
 #' 
 etl_qa_final_results <- function(initial_qa_results, config) {
   # Set visible bindings for global variables
   abs_change <- proportion <- varname <- time_period <- abs_proportion_change <- NULL
-  value <- median <- your_data <- chi <- problem <- vartype <- 
+  value <- median <- your_data <- chi <- problem <- vartype <- count <- NULL
   
   # Extract the time variable name from the config ----
   time_var <- config$time_var
@@ -1614,6 +1589,15 @@ etl_qa_final_results <- function(initial_qa_results, config) {
   vals_categorical <- initial_qa_results$vals_categorical
   if (nrow(vals_categorical) > 0) {
     if (!is.null(vals_categorical)) {
+      
+      vals_categorical <- merge(
+        setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_categorical$varname), unique(vals_categorical$value)), c(config$time_var, 'varname', 'value')),
+        vals_categorical,
+        by = c(config$time_var, 'varname', 'value'),
+        all = T)
+      vals_categorical[is.na(count), count := 0]
+      vals_categorical[is.na(proportion), proportion := 0]
+      
       setnames(vals_categorical, time_var, "time_period")
       vals_categorical[, abs_proportion_change := fifelse(
         abs((proportion - shift(proportion)) * 100) > config$abs_threshold, 
@@ -1628,6 +1612,13 @@ etl_qa_final_results <- function(initial_qa_results, config) {
   vals_continuous <- initial_qa_results$vals_continuous
   if (nrow(vals_continuous) > 0) {
     if (!is.null(vals_continuous)) {
+      
+      vals_continuous <- merge(
+        setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_continuous$varname)), c(config$time_var, 'varname')), 
+        vals_continuous, 
+        by = c(config$time_var, 'varname'), 
+        all = T)
+      
       setnames(vals_continuous, time_var, "time_period")
       vals_continuous[, `:=`(
         rel_mean_change = fifelse(
@@ -1651,6 +1642,13 @@ etl_qa_final_results <- function(initial_qa_results, config) {
   # Process date data ----
   vals_date <- initial_qa_results$vals_date
   if (nrow(vals_date) > 0) {
+    
+    vals_date <- merge(
+      setnames(CJ(config$time_range[1]:config$time_range[2], unique(vals_date$varname)), c(config$time_var, 'varname')), 
+      vals_date, 
+      by = c(config$time_var, 'varname'), 
+      all = T)
+    
     setnames(vals_date, time_var, "time_period")
     setnames(vals_date, c('median', 'min', 'max'), c('median_date', 'min_date', 'max_date')) # need to change names because otherwise date format would be lost when combined with numeric data
   }
