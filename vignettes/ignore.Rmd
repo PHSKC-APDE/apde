@@ -1,0 +1,14 @@
+---
+title: "ignore"
+output:
+  github_document: default
+  toc: true
+vignette: |
+  %\VignetteEngine{knitr::knitr} %\VignetteIndexEntry{ignore}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## This is just to stop devtools::check from complaining about there not being a vignette. It defines vignette as a .Rmd file, not a .qmd file. 
