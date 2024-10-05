@@ -39,6 +39,7 @@ Imports:
 Remotes:
     github::PHSKC-APDE/rads.data, github::PHSKC-APDE/rads
 Suggests: 
+    markdown,
     testthat
 VignetteBuilder: 
-  knitr
+    knitr

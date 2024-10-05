@@ -4,8 +4,6 @@ format:
   gfm:
     prefer-html: false
     self-contained: true
-  pdf: default
-  html: default
 editor: visual
 ---
 
@@ -79,6 +77,7 @@ qaSQL <- etl_qa_run_pipeline(
 ```
 
 ### missingness
+
 Here is a sample of the 'missingness' worksheet saved to the Excel file. You would be able to access this in R by typing something like `myresult$final$missingness`. As per the default settings (which can be adjusted), it is flagging \>= 3% *absolute* changes in the proportion missing between adjacent time periods.
 
 ```{r echo=FALSE, results='show', warning=FALSE, message=FALSE}
@@ -91,6 +90,7 @@ pretty_kable(sample_missing[keepers])
 ```
 
 ### values
+
 Similarly, here is a sample from the 'values' worksheet (`myresult$final$values`). The default settings flag rows with a \>= 2% *relative* change in the mean value between adjacent years.
 
 ```{r echo=FALSE, results='show', warning=FALSE, message=FALSE}
@@ -102,7 +102,8 @@ pretty_kable(sample_values[keepers])
 ```
 
 ### chi_standards
-Finally, if you set `check_chi = TRUE`, your Excel workbook will have a sheet called 'chi_standards' (`myresult$final$chi_standards`). It provides a simple '*' to indicate when there is a misalignment between the CHI standard and your data.
+
+Finally, if you set `check_chi = TRUE`, your Excel workbook will have a sheet called 'chi_standards' (`myresult$final$chi_standards`). It provides a simple '\*' to indicate when there is a misalignment between the CHI standard and your data.
 
 ```{r echo=FALSE, results='show', warning=FALSE, message=FALSE}
 # Get a sample of the final values table
@@ -111,7 +112,6 @@ keepers <- which(!is.na(sample_chi$problem))[1]
 keepers <- (keepers - 4):(keepers + 4)
 pretty_kable(sample_chi[keepers])
 ```
-
 
 Now that you've learned what this function can can, let's learn how to use it!
 
@@ -131,9 +131,10 @@ Since this function allows the user to QA data in three different data sources t
 
 ## `data_source_type`
 
-Character string specifying the type of data source. Must be one of `'r_dataframe'`, `'sql_server'`, or `'rads'`. 
+Character string specifying the type of data source. Must be one of `'r_dataframe'`, `'sql_server'`, or `'rads'`.
 
 ## `connection`
+
 A DBIConnection object.<br>**Required only when `data_source_type = 'sql_server'`**.
 
 ## `data_params`
@@ -215,9 +216,11 @@ Numeric threshold for flagging *absolute* percentage changes in *proportions.* P
 Numeric threshold for flagging *relative* percentage changes in *means* and *medians*. Permissible range is \[0, 100\].<br>Default is `rel_threshold = 2`.
 
 # Examples
+
 As stated above, this function can QA data in SQL Server, a local data.table/ data.frame, or from `rads`. Here we provide an example of each method to QA the same data source. Since all three methods provide identical output, we will only explore the SQL Server QA in detail knowing that it is generalizable.
 
 ## QA SQL Server data
+
 ```{r echo=TRUE, results='show', warning=TRUE, message=TRUE}
 myconnection <- rads::validate_hhsaw_key()
 qaSQL <- etl_qa_run_pipeline(
@@ -243,11 +246,11 @@ The final statement asks the user to check their `output_directory`, which is `t
 list.files(tempdir())
 ```
 
- - `birth.final_analytic_qa_missing_2024_09_30.pdf` contains graphs like the one showin in Figure 1. 
- - `birth.final_analytic_qa_values_2024_09_30.pdf` contains the graphs like those in Figures 2a, 2b, and 2c.
- - `birth.final_analytic_qa_2024_09_30.xlsx` contains three worksheeets, one for each of the three tables given in the Tables section above.
- 
-We also saved the output as the object `qaSQL`. Let's confirm that what was written about the returned object in the Sneak peek section above was correct: 
+-   `birth.final_analytic_qa_missing_2024_09_30.pdf` contains graphs like the one showin in Figure 1.
+-   `birth.final_analytic_qa_values_2024_09_30.pdf` contains the graphs like those in Figures 2a, 2b, and 2c.
+-   `birth.final_analytic_qa_2024_09_30.xlsx` contains three worksheeets, one for each of the three tables given in the Tables section above.
+
+We also saved the output as the object `qaSQL`. Let's confirm that what was written about the returned object in the Sneak peek section above was correct:
 
 ```{r echo=TRUE, results='show', warning=TRUE, message=TRUE}
 # confirm it is a list
@@ -262,6 +265,7 @@ names(qaSQL$final)
 ```
 
 ## QA data.table / data.frame data in memory
+
 ```{r echo=TRUE, results='hide', warning=FALSE, message=FALSE}
 birth_data <- rads::get_data_birth(year = c(2013:2022), 
                              kingco = F, 
@@ -282,6 +286,7 @@ qaDF <- etl_qa_run_pipeline(
 ```
 
 ## QA `rads` data
+
 ```{r echo=TRUE, results='hide', warning=FALSE, message=FALSE}
 qaRADS <- etl_qa_run_pipeline(
   data_source_type = 'rads',
@@ -300,6 +305,7 @@ qaRADS <- etl_qa_run_pipeline(
 ```
 
 ## Confirm that the results from each method are identical
+
 ```{r echo=TRUE, results='show', warning=TRUE, message=TRUE}
 identical(qaDF$final, qaSQL$final)
 identical(qaDF$final, qaRADS$final)
