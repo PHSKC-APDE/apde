@@ -1561,8 +1561,9 @@ generate_categorical_query <- function(config) {
 #'
 #' @keywords internal
 #' 
-#' @importFrom data.table setnames setorderv ":=" fifelse shift setkey CJ
+#' @importFrom data.table setnames setorderv ":=" fifelse shift setkey CJ 
 #' @importFrom rads round2
+#' @importFrom stats setNames
 #' 
 etl_qa_final_results <- function(initial_qa_results, config) {
   # Set visible bindings for global variables
@@ -1591,9 +1592,9 @@ etl_qa_final_results <- function(initial_qa_results, config) {
     if (!is.null(vals_categorical)) {
       
       # first create a template of all possible unique varname x value x time_period 
-      unique_values <- unique(vals_categorical[, .(varname, value)])
-      unique_values <- unique_values[, c(.SD, setNames(list(config$time_range[1]:config$time_range[2]), config$time_var)), 
-                                 by = .(varname, value)]
+      unique_values <- unique(vals_categorical[, list(varname, value)])
+      unique_values <- unique_values[, c(.SD, stats::setNames(list(config$time_range[1]:config$time_range[2]), config$time_var)), 
+                                 by = list(varname, value)]
       
       # then merge the actual data onto to the template
       vals_categorical <- merge(
