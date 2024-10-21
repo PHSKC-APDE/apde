@@ -56,7 +56,7 @@ Default is TRUE.}
 
 \item{test_schema}{Add index to a temporary/development schema when testing out table creation.
 Will use the to_schema (specified or in the YAML file) to make a new table name of
-{to_schema}_{to_table}. Schema must already exist in the database. Most useful
+\{to_schema\}_\{to_table\}. Schema must already exist in the database. Most useful
 when the user has an existing YAML file and does not want to overwrite it. Default is NULL.}
 }
 \description{
@@ -71,17 +71,21 @@ specified or come from a YAML file, the hierarchy is
 specified > argument under server in YAML > argument not under server in YAML.
 \subsection{Example YAML file with no server and a CCS index}{
 
-(Assume the indentation is appropriate)\preformatted{to_schema: raw
+(Assume the indentation is appropriate)
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{to_schema: raw
 to_table: mcaid_elig
 *optional other components like a qa_schema and qa_table, variables, etc.*
 index_type: ccs
 index_name: idx_ccs_raw_mcaid_elig
-}
+}\if{html}{\out{</div>}}
 }
 
 \subsection{Example YAML file with servers (phclaims, hhsaw) and clustered index}{
 
-(Assume the indentation is appropriate)\preformatted{phclaims:
+(Assume the indentation is appropriate)
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{phclaims:
     to_schema: raw
     to_table: mcaid_elig
 hhsaw:
@@ -93,7 +97,7 @@ index_name: idx_raw_mcaid_elig_id_date
 index_vars: 
     - id_apde
     - start_date
-}
+}\if{html}{\out{</div>}}
 }
 }
 \examples{

@@ -13,12 +13,15 @@
 #' @param conn_phclaims SQL server connection to the PHClaims server, created using \code{odbc} package.
 #' 
 #' @importFrom data.table data.table ":=" .I .N .SD setDT setorder
-#' 
+#' @importFrom utils str
 #' 
 #' @export
 
 deduplicate_addresses <- function(conn_hhsaw = NULL,
                                   conn_phclaims = NULL) {
+  
+  # Set visible bindings for global variables
+  row_cnt <- NULL
   
   # Set up functions to avoid duplicating code ----
   sql_loader <- function(df, conn = NULL, to_schema = "ref", to_table = NULL, overwrite = T) {
@@ -117,7 +120,7 @@ deduplicate_addresses <- function(conn_hhsaw = NULL,
     
     if (nrow(update_phclaims) > 0) {
       message(nrow(update_phclaims), " address rows to be loaded from HHSAW to PHClaims")
-      print(str(update_phclaims))
+      print(utils::str(update_phclaims))
       sql_loader(df = update_phclaims, conn = conn_phclaims, 
                  to_schema = to_schema_phclaims, to_table = to_table_phclaims,
                  overwrite = F)

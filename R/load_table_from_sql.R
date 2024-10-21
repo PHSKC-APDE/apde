@@ -70,10 +70,14 @@
 #' loading times substantially. Use \code{add_index} to restore the index after. Default is TRUE.
 #' @param test_schema Write to a temporary/development schema when testing out table creation. 
 #' Will use the to_schema (specified or in the YAML file) to make a new table name of  
-#' {to_schema}_{to_table}. Schema must already exist in the database. Most useful 
+#' \{to_schema\}_\{to_table\}. Schema must already exist in the database. Most useful 
 #' when the user has an existing YAML file and does not want to overwrite it. 
 #' Only 5,000 rows will be loaded to each table (4000 from the archive table if it exists and 1000 from the 
 #' from_table). Default is NULL.
+#'
+#' @importFrom configr is.yaml.file
+#' @importFrom DBI dbExistsTable dbGetQuery dbQuoteString 
+#' @importFrom glue glue
 #'
 #' @examples
 #' \dontrun{
@@ -106,6 +110,9 @@ load_table_from_sql_f <- function(
   drop_index = T,
   test_schema = NULL
 ) {
+  
+  # Set visible bindings for global variables
+  test_mode <- db_claims <- NULL
   
   # INITIAL ERROR CHECKS ----
   # Check if the config provided is a local file or on a webpage

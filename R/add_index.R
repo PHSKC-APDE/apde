@@ -62,8 +62,11 @@
 #' Default is TRUE.
 #' @param test_schema Add index to a temporary/development schema when testing out table creation. 
 #' Will use the to_schema (specified or in the YAML file) to make a new table name of  
-#' {to_schema}_{to_table}. Schema must already exist in the database. Most useful 
+#' \{to_schema\}_\{to_table\}. Schema must already exist in the database. Most useful 
 #' when the user has an existing YAML file and does not want to overwrite it. Default is NULL.
+#'
+#' @importFrom configr is.yaml.file
+#' @importFrom yaml yaml.load read_yaml
 #'
 #' @examples
 #' \dontrun{
