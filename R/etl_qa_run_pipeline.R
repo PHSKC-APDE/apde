@@ -1764,9 +1764,19 @@ etl_qa_export_results <- function(qa_results, config) {
     datasource = config$data_params$data_source
   }  
   
+  # Warning when a column is missing 100% of the time ----
+  mi100 <- copy(qa_results$missingness)[, .(all_proportion_one = all(proportion == 1)), by = varname][all_proportion_one == TRUE]
+  if(nrow(mi100) > 0){
+    mi100vars <- paste0(unique(mi100$varname), collapse  = ', ') # string of all 100% missing separated by comma
+    mi100vars <- sub(", ([^,]*)$", " & \\1", mi100vars) # replace last comma with ampersand
+    warning("\n\U00026A0\nThe following variables are 100% missing across all time points and therefore DO NOT have value plots:\n", 
+            mi100vars, immediate.=TRUE)
+    mi100vars <- unique(mi100$varname) # save a clean vector of all variables with 100% missing data
+  } else {mi100vars <- c() }
+  
   # Function to create plots ----
   create_plots <- function(plot_data, plot_type) {
-    plot_data <- plot_data[!is.na(varname)] # arises where there were no date variables, or no continous variables, etc.
+    plot_data <- plot_data[!is.na(varname)] # arises where there were no date variables, or no continuous variables, etc.
     
     pdf_file <- file.path(output_directory, paste0(datasource, '_qa_', plot_type, '_', gsub("-", "_", Sys.Date()), '.pdf'))
     grDevices::pdf(pdf_file, onefile = TRUE, width = 11, height = 8.5)
@@ -1781,7 +1791,7 @@ etl_qa_export_results <- function(qa_results, config) {
         print(plot)
       }
     } else if (plot_type == "values") {
-      for (var in unique(plot_data$varname)) {
+      for (var in setdiff(unique(plot_data$varname), mi100vars)) { # exclude vars that are 100% missing at all time points
         # message('Plotting ', var)
         var_data <- plot_data[varname == var]
         if (all(var_data$vartype == 'Categorical')) {
