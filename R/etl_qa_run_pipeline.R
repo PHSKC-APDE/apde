@@ -1980,6 +1980,8 @@ plotDATE <- function(var_data, time_var, mytitle) {
     theme(plot.title = element_text(hjust = 0.5),
           plot.subtitle = element_text(hjust = 0.5, face = 'bold', size = 16)) +
     guides(color = guide_legend(override.aes = list(linetype = c("solid", "1212", "solid"))))
+  
+  return(plot)
 }
 
 ## plotMISSING() ----
