@@ -1749,7 +1749,7 @@ etl_qa_final_results <- function(initial_qa_results, config) {
 #' 
 etl_qa_export_results <- function(qa_results, config) {
   # Set visible bindings for global variables
-  varname <- NULL
+  varname <- all_proportion_one <- proportion <- NULL
   
   # Extract information from config ----
   output_directory <- config$output_directory
@@ -1765,7 +1765,7 @@ etl_qa_export_results <- function(qa_results, config) {
   }  
   
   # Warning when a column is missing 100% of the time ----
-  mi100 <- copy(qa_results$missingness)[, .(all_proportion_one = all(proportion == 1)), by = varname][all_proportion_one == TRUE]
+  mi100 <- copy(qa_results$missingness)[, list(all_proportion_one = all(proportion == 1)), by = varname][all_proportion_one == TRUE]
   if(nrow(mi100) > 0){
     mi100vars <- paste0(unique(mi100$varname), collapse  = ', ') # string of all 100% missing separated by comma
     mi100vars <- sub(", ([^,]*)$", " & \\1", mi100vars) # replace last comma with ampersand
@@ -1896,27 +1896,42 @@ plotCONTINUOUS <- function(var_data, time_var, mytitle) {
   # Set visible bindings for global variables
   time_period <- median <- NULL
   
-  ggplot(var_data) +
-    geom_line(aes(x = time_period, y = min, color = "Minimum", linetype = "Minimum"), linewidth = 2) +
-    geom_line(aes(x = time_period, y = mean, color = "Mean", linetype = "Mean"), linewidth = 1.5) +
-    geom_line(aes(x = time_period, y = median, color = "Median", linetype = "Median"), linewidth = 1.5) +
-    geom_line(aes(x = time_period, y = max, color = "Maximum", linetype = "Maximum"), linewidth = 2) +
+  # Typical case where there is more than 1 row of data
+  if(nrow(var_data[!is.na(mean)]) > 1){
+    plot <- ggplot(var_data) +
+      geom_line(aes(x = time_period, y = min, color = "Minimum", linetype = "Minimum"), linewidth = 2) +
+      geom_line(aes(x = time_period, y = mean, color = "Mean", linetype = "Mean"), linewidth = 1.5) +
+      geom_line(aes(x = time_period, y = median, color = "Median", linetype = "Median"), linewidth = 1.5) +
+      geom_line(aes(x = time_period, y = max, color = "Maximum", linetype = "Maximum"), linewidth = 2) +
+      scale_linetype_manual(name = "Stats",
+                            values = c("Minimum" = "solid",
+                                       "Mean" = "dotted",
+                                       "Median" = "1212",
+                                       "Maximum" = "solid"))
+    
+  } else if (nrow(var_data[!is.na(mean)]) == 1) {
+    plot <- ggplot(var_data) +
+      geom_point(aes(x = time_period, y = min, color = "Minimum"), size = 3) +
+      geom_point(aes(x = time_period, y = mean, color = "Mean"), size = 3) +
+      geom_point(aes(x = time_period, y = median, color = "Median"), size = 3) +
+      geom_point(aes(x = time_period, y = max, color = "Maximum"), size = 3)
+  }
+  
+  plot <- plot + 
     scale_color_manual(name = "Stats",
                        values = c("Minimum" = "#2C7BB6",
                                   "Mean" = "#D7191C",
-                                  "Median" = "#ABDDA4", 
+                                  "Median" = "#ABDDA4",
                                   "Maximum" = "#FDAE61")) +
-    scale_linetype_manual(name = "Stats",
-                          values = c("Minimum" = "solid",
-                                     "Mean" = "dotted",
-                                     "Median" = "1212", 
-                                     "Maximum" = "solid")) +
+    
     scale_x_continuous(name = time_var, breaks = seq(min(var_data[['time_period']]), max(var_data[['time_period']]), length.out = 5)) +
     labs(title = mytitle, subtitle = paste0('', var_data$varname[1]), x = time_var, y = var_data$varname[1]) +
     theme_bw() +
     theme(plot.title = element_text(hjust = 0.5),
           plot.subtitle = element_text(hjust = 0.5, face = 'bold', size = 16)) +
     guides(color = guide_legend(override.aes = list(linetype = c("solid", "dotted", "1212", "solid"))))
+  
+  return(plot)
 }
 
 ## plotDATE() ----
@@ -1933,18 +1948,28 @@ plotDATE <- function(var_data, time_var, mytitle) {
   # Set visible bindings for global variables
   time_period <- min_date <- median_date <- max_date <- NULL
   
-  ggplot(var_data[!is.na(median_date)]) +
-    geom_line(aes(x = time_period, y = min_date, color = "Minimum", linetype = "Minimum"), linewidth = 2) +
-    geom_line(aes(x = time_period, y = median_date, color = "Median", linetype = "Median"), linewidth = 1.5) +
-    geom_line(aes(x = time_period, y = max_date, color = "Maximum", linetype = "Maximum"), linewidth = 2) +
+  # Typical case where there is more than 1 row of data
+  if (nrow(var_data[!is.na(median_date)]) > 1){
+    plot <-   ggplot(var_data[!is.na(median_date)]) +
+      geom_line(aes(x = time_period, y = min_date, color = "Minimum", linetype = "Minimum"), linewidth = 2) +
+      geom_line(aes(x = time_period, y = median_date, color = "Median", linetype = "Median"), linewidth = 1.5) +
+      geom_line(aes(x = time_period, y = max_date, color = "Maximum", linetype = "Maximum"), linewidth = 2) +
+      scale_linetype_manual(name = "Stats",
+                            values = c("Minimum" = "solid",
+                                       "Median" = "1212", 
+                                       "Maximum" = "solid"))
+  } else if (nrow(var_data[!is.na(median_date)]) == 1){
+    plot <-   ggplot(var_data[!is.na(median_date)]) +
+      geom_point(aes(x = time_period, y = min_date, color = "Minimum"), size = 3) +
+      geom_point(aes(x = time_period, y = median_date, color = "Median"), size = 3) +
+      geom_point(aes(x = time_period, y = max_date, color = "Maximum"), size = 3)
+  }
+  
+  plot <- plot + 
     scale_color_manual(name = "Stats",
                        values = c("Minimum" = "#2C7BB6",
                                   "Median" = "#ABDDA4", 
                                   "Maximum" = "#FDAE61")) +
-    scale_linetype_manual(name = "Stats",
-                          values = c("Minimum" = "solid",
-                                     "Median" = "1212", 
-                                     "Maximum" = "solid")) +
     scale_x_continuous(name = time_var, breaks = seq(min(var_data[['time_period']]), max(var_data[['time_period']]), length.out = 5)) +
     scale_y_date(date_labels = "%Y-%m-%d", 
                  limits = c(min(var_data$min_date), max(var_data$max_date)),
@@ -1955,6 +1980,8 @@ plotDATE <- function(var_data, time_var, mytitle) {
     theme(plot.title = element_text(hjust = 0.5),
           plot.subtitle = element_text(hjust = 0.5, face = 'bold', size = 16)) +
     guides(color = guide_legend(override.aes = list(linetype = c("solid", "1212", "solid"))))
+  
+  return(plot)
 }
 
 ## plotMISSING() ----
