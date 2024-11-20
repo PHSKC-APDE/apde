@@ -285,13 +285,11 @@ table_duplicate_f <- function(conn_from,
   message("All tables duplicated successfully.")
 }
 
-<<<<<<< HEAD
 
 
 #### PARAMETERS ####
 # conn = name of the connection to the SQL database
 # delete_table_suffix = variable of a suffix in tables that will be deleted
-=======
 # table_duplicate_delete_f() ----
 #' @title Delete tables based on suffix 
 #' @description Delete tables based on suffix
@@ -314,7 +312,7 @@ table_duplicate_f <- function(conn_from,
 #'   # ENTER EXAMPLES HERE
 #'  }
 #'  
->>>>>>> 07c357897dacffb356bf051c64164d7c2591159d
+
 table_duplicate_delete_f <- function(conn,
                                      delete_table_suffix = "_dupe_table_to_delete"
                                      ) {
