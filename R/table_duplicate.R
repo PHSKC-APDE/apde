@@ -245,6 +245,39 @@ table_duplicate_f <- function(conn_from,
     }
   } else {
     message(glue::glue("Table {i}: [{table_df[i, 'from_schema']}].[{table_df[i, 'from_table']}] -> [{table_df[i, 'to_schema']}].[{table_df[i, 'to_table']}]"))
+    message("Checking if destination table exists...")
+    if(DBI::dbExistsTable(conn_to, name = DBI::Id(schema = table_df[i, "to_schema"], table = table_df[i, "to_table"])) == T) {
+      if(delete_table == T) {
+        message("Deleting old destination table...")
+        DBI::dbExecute(conn_to,
+                       glue::glue_sql("DROP TABLE {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`}",
+                                      .con = conn_to))
+      } else {
+        dts <- delete_table_suffix
+        dts_num <- 0
+        # Checks if there is already a "to_delete" table with the same name. If so, keep adding a number to the end until you are renaming to a new table.
+        while(DBI::dbExistsTable(conn_to, name = DBI::Id(schema = table_df[i, "to_schema"], table = paste0(table_df[i, "to_table"], dts))) == T) {
+          dts_num <- dts_num + 1
+          dts <- paste0(delete_table_suffix, "_", dts_num)
+        }
+        message(glue::glue("Renaming old destination table to [{table_df[i, 'to_schema']}].[{paste0(table_df[i, 'to_table'], dts)}]..."))
+        # Attempts to rename table with sytax for standard databases. If that fails, rename table with syntax that is used in an Azure Synapse environment.
+        tryCatch(
+          {
+            DBI::dbExecute(conn_to,
+                           glue::glue_sql("EXEC sp_rename {paste0(table_df[i, 'to_schema'], '.', table_df[i, 'to_table'])}, {paste0(table_df[i, 'to_table'], dts)}",
+                                          .con = conn_to))
+          },
+          error = function(cond) {
+            DBI::dbExecute(conn_to,
+                           glue::glue_sql("RENAME OBJECT {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`} TO {`{paste0(table_df[i, 'to_table'], dts)}`}",
+                                          .con = conn_to))    
+          }
+        )
+      }
+    } else {
+      message("Destination table does not exist...")
+    }
     cols_from <- DBI::dbGetQuery(conn_from,
                                glue::glue_sql("
                                                   SELECT 
