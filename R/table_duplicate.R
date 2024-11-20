@@ -1,27 +1,50 @@
-#### FUNCTION TO COPY AN SQL TABLE FROM ONE SERVER TO ANOTHER - MADE FOR SMALLER TABLES (EX: REFERENCE TABLES)
-# Jeremy Whitehurst
-# Created: 2024-05-01
+# table_duplicate_f() ----
+#' @title copy a (smaller) SQL table from server to another 
+#' @description Made for smaller table, e.g., reference tables
+#' @author Jeremy Whitehurst, 2024-05-01
+#' 
+#' @param conn_from Name of the connection to the FROM SQL database
+#' @param conn_to Name of the connection to the TO SQL database
+#' @param server_to Name of the server/odbc for the TO SQL database. 
+#' ***IMPORTANT*** For any Azure based duplication, there must be a keyring with 
+#' a service name that matches the server_to parameter
+#' @param db_to Name of the TO SQL database
+#' @param table_df data.frame that can hold a list of FROM schema, FROM tables 
+#' (required), TO schema, and TO tables
+#' @param from_schema Variable for FROM schema for either a single table or can 
+#' populate any missing data in the table_df from_schema column
+#' @param from_table Variable for FROM table for duplicating a single table
+#' @param to_schema Variable for TO schema for either a single table or can populate 
+#' any missing data in the table_df to_schema column, can be blank and use the 
+#' from_schema on TO database
+#' @param to_table Variable for TO table for either a single table or can populate 
+#' any missing data in the table_df to_table column, can be blank and use the 
+#' from_table on TO database
+#' @param to_table_prefix Variable of a prefix to be added before the TO table name
+#' @param confirm_tables If \code{TRUE}, will require user confirm the list of 
+#' tables being duplicated
+#' @param delete_table If \code{TRUE}, will delete old TO tables, if \code{FALSE}, 
+#' will rename old TO tables
+#' @param delete_table_suffix Variable of a suffix to be added after the name of 
+#' old TO tables
+#' @param table_structure_only If \code{TRUE}, will only copy the table structure
+#' of old TO new tables
+#' 
+#' @details
+#' Plans for future improvement ... 
+#' 
+#' @importFrom utils askYesNo
+#' 
+#' @return None
+#' 
+#' @export
+#' 
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
+#'  
 
-
-### Plans for future improvements:
-
-
-#### PARAMETERS ####
-# conn_from = name of the connection to the FROM SQL database
-# conn_to = name of the connection to the TO SQL database
-# server_to = name of the server/odbc for the TO SQL database. ***IMPORTANT*** For any Azure based duplication, there must be a keyring with a service name that matches the server_to parameter
-# db_to = name of the TO SQL database
-# table_df = data.frame that can hold a list of FROM schema, FROM tables (required), TO schema, and TO tables
-# from_schema = variable for FROM schema for either a single table or can populate any missing data in the table_df from_schema column
-# from_table = variable for FROM table for duplicating a single table
-# to_schema = variable for TO schema for either a single table or can populate any missing data in the table_df to_schema column, can be blank and use the from_schema on TO database
-# to_table = variable for TO table for either a single table or can populate any missing data in the table_df to_table column, can be blank and use the from_table on TO database
-# to_table_prefix = variable of a prefix to be added before the TO table name
-# confirm_tables = if TRUE, will require user confirm the list of tables being duplicated
-# delete_tables = if TRUE, will delete old TO tables, if FALSE, will rename old TO tables
-# delete_table_suffix = variable of a suffix to be added after the name of old TO tables
-
-#### FUNCTION ####
 table_duplicate_f <- function(conn_from,
                               conn_to,
                               server_to,
@@ -262,11 +285,36 @@ table_duplicate_f <- function(conn_from,
   message("All tables duplicated successfully.")
 }
 
+<<<<<<< HEAD
 
 
 #### PARAMETERS ####
 # conn = name of the connection to the SQL database
 # delete_table_suffix = variable of a suffix in tables that will be deleted
+=======
+# table_duplicate_delete_f() ----
+#' @title Delete tables based on suffix 
+#' @description Delete tables based on suffix
+#' @author Jeremy Whitehurst, 2024-05-01
+#' 
+#' @param conn Name of the connection to the FROM SQL database
+#' @param delete_table_suffix String of a suffix in tables that will be deleted
+#'  
+#' @details
+#' Plans for future improvement ... 
+#' 
+#' @importFrom utils askYesNo
+#' 
+#' @return None
+#' 
+#' @export
+#' 
+#' @examples
+#'  \dontrun{
+#'   # ENTER EXAMPLES HERE
+#'  }
+#'  
+>>>>>>> 07c357897dacffb356bf051c64164d7c2591159d
 table_duplicate_delete_f <- function(conn,
                                      delete_table_suffix = "_dupe_table_to_delete"
                                      ) {
@@ -292,6 +340,49 @@ table_duplicate_delete_f <- function(conn,
   }
 }
 
+# load_bcp_f() ----
+#' @title Load Data to SQL Server Using BCP (Bulk Copy Program)
+#' @description This function loads data into a SQL Server database table using the BCP (Bulk Copy Program) utility.
+#' @author Jeremy Whitehurst, 2024-05-01
+#' 
+#' @param dataset A data.frame or data.table to be loaded, or a character string 
+#' specifying the filepath of a text file to be loaded.
+#' @param server The name of the SQL Server instance.
+#' @param db_name The name of the target database.
+#' @param schema_name The name of the schema containing the target table.
+#' @param table_name The name of the target table.
+#' @param user Optional. The username for SQL Server authentication.
+#' @param pass Optional. The password for SQL Server authentication.
+#'  
+#' @details
+#' This function uses the BCP utility to efficiently load data into a SQL Server 
+#' table. It supports both Windows authentication and SQL Server authentication. 
+#' If a data.frame or data.table is provided, it is first written to a temporary 
+#' file before being loaded.
+#' 
+#' Plans for future improvement ...
+#' 
+#' @importFrom data.table fwrite
+#' @importFrom glue glue
+#' 
+#' @return A character vector containing the output of the BCP command.
+#' 
+#' @export
+#' 
+#' @examples
+#'  \dontrun{
+#'   # Load data from a data.frame
+#'   df <- data.frame(id = 1:5, name = c("Alice", "Bob", "Charlie", "David", "Eve"))
+#'   load_bcp_f(df, "SQLSERVER01", "MyDatabase", "MySchema", "MyTable")
+#'   
+#'   # Load data from a file
+#'   load_bcp_f("C:/data/mydata.txt", "SQLSERVER01", "MySchema", "dbo", "MyTable")
+#'   
+#'   # Load data using SQL Server authentication
+#'   load_bcp_f(df, "SQLSERVER01", "MyDatabase", "dbo", "MyTable", 
+#'             user = "myuser", pass = "mypassword")
+#'  }
+#'
 load_bcp_f <- function(dataset, 
                        server,
                        db_name,

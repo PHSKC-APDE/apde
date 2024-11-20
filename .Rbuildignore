@@ -1,2 +1,9 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+^LICENSE\.md$
+^vignettes/etl_qa_run_pipeline.qmd$
+^vignettes/etl_qa_categorical.jpg$
+^vignettes/etl_qa_continuous.jpg$
+^vignettes/etl_qa_date.jpg$
+^vignettes/etl_qa_missing.jpg$
+^vignettes/etl_qa_run_pipeline.md$

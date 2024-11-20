@@ -1,7 +1,7 @@
 Package: apde
 Type: Package
 Title: Common functions used in APDE's work
-Version: 0.3.2
+Version: 0.4.1
 Author@R: c(
   person("Alastair", "Matheson", email = "alastair.matheson@kingcounty.gov", role = c("aut", "cre")))
 Author: Alastair Matheson [aut, cre]
@@ -13,9 +13,33 @@ Description: Primarily for internal use in Public Health - Seattle & King County
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.3.2
 Imports:
-    dplyr (>= 0.8.4),
+    blastula,
+    configr,
     data.table,
+    dplyr,
+    DBI, 
+    glue,
+    ggplot2,
     httr,
-    rjson
+    keyring, 
+    knitr,
+    odbc,
+    openxlsx,
+    rads.data (>= 1.0.8.0),
+    rads (>= 1.2.1.3),
+    RODBC,
+    scales,
+    shiny,
+    shinyWidgets,
+    svDialogs, 
+    sys,
+    yaml
+Remotes:
+    github::PHSKC-APDE/rads.data, github::PHSKC-APDE/rads
+Suggests: 
+    markdown,
+    testthat
+VignetteBuilder: 
+    knitr

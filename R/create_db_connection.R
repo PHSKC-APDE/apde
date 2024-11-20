@@ -1,21 +1,22 @@
-#' @TITLE Create Database Connection Funciton
+#' @title Create Database Connection Function
 #' 
-#' @AUTHOR Jeremy Whitehurst
-#' @AUTHOR Kai Fukutaki
+#' @author Jeremy Whitehurst
+#' @author Kai Fukutaki
 #' 
-#' @DESCRIPTION Create a connection to the prod or dev servers that APDE uses
+#' @description
+#' Create a connection to the prod or dev servers that APDE uses
 #' 
-#' @PARAMETERS 
-#' @server: Whether we are connecting to HHSAW, inthealth, or phextractstore
-#' @prod: Whether the production or dev/WIP servers are to be used. Defaults to T.
-#' @interactive: Whether to input password manually for HHSAW/inthealth or to 
+#' @param  server Whether we are connecting to HHSAW, inthealth, or phextractstore
+#' @param prod Whether the production or dev/WIP servers are to be used. Defaults to T.
+#' @param interactive Whether to input password manually for HHSAW/inthealth or to 
 #' use keyring. True should be used when connecting on VM, typically, or if
 #' keyring/odbc are not set up yet for a given server. Defaults to F.
 #' 
 #' Run from master_mcaid_partial script 
 #' https://github.com/PHSKC-APDE/claims_data/blob/master/claims_db/db_loader/mcaid/master_mcaid_partial.R
 #' 
-#' @TODO
+#' @importFrom odbc odbc
+#' @importFrom keyring key_list key_get
 #' 
 
 
@@ -23,6 +24,8 @@
 create_db_connection <- function(server = c("phextractstore", "hhsaw", "inthealth"), 
                                  prod = T, 
                                  interactive = F) {
+  # declare visible bindings for global variables
+  odbc_sources <- NULL
   
   server <- match.arg(server)
   
