@@ -34,7 +34,8 @@ table_duplicate_f <- function(conn_from,
                               to_table_prefix = NULL,
                               confirm_tables = T,
                               delete_table = F,
-                              delete_table_suffix = "_dupe_table_to_delete"
+                              delete_table_suffix = "_dupe_table_to_delete",
+                              table_structure_only = F
                               ) {
   if(nrow(table_df) == 0) {
     # Check if table_df is empty. If it is, all from/to variables must be set.
@@ -110,63 +111,64 @@ table_duplicate_f <- function(conn_from,
   }
   
   message("Begin duplicating tables...")
-  for(i in 1:nrow(table_df)) {
-    message(glue::glue("Table {i}: [{table_df[i, 'from_schema']}].[{table_df[i, 'from_table']}] -> [{table_df[i, 'to_schema']}].[{table_df[i, 'to_table']}]"))
-    message("Pulling data from source table...")
-    data_from <- DBI::dbGetQuery(conn_from, 
-                                 glue::glue_sql("SELECT * FROM {`table_df[i, 'from_schema']`}.{`table_df[i, 'from_table']`}",
-                                                .con = conn_from))
-    message("Checking if destination table exists...")
-    if(DBI::dbExistsTable(conn_to, name = DBI::Id(schema = table_df[i, "to_schema"], table = table_df[i, "to_table"])) == T) {
-      message("Destination table exists. Pulling data from destination table to compare with source table...")
-      data_to <- DBI::dbGetQuery(conn_to, 
-                                 glue::glue_sql("SELECT * FROM {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`}",
-                                                .con = conn_to))
-      if(nrow(data_to) == 0) {
-        table_match <- F
-      } else {
-        suppressWarnings(table_match <- dplyr::all_equal(data_from, data_to, ignore_col_order = F))
-      }
-      if(table_match == T) {
-        message("Destination table matches source table...")
-        next
-      } else {
-        message("Destination table does not match source table...")
-        if(delete_table == T) {
-          message("Deleting old destination table...")
-          DBI::dbExecute(conn_to,
-                         glue::glue_sql("DROP TABLE {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`}",
-                                        .con = conn_to))
+  if(table_structure_only == F) {
+    for(i in 1:nrow(table_df)) {
+      message(glue::glue("Table {i}: [{table_df[i, 'from_schema']}].[{table_df[i, 'from_table']}] -> [{table_df[i, 'to_schema']}].[{table_df[i, 'to_table']}]"))
+      message("Pulling data from source table...")
+      data_from <- DBI::dbGetQuery(conn_from, 
+                                  glue::glue_sql("SELECT * FROM {`table_df[i, 'from_schema']`}.{`table_df[i, 'from_table']`}",
+                                                  .con = conn_from))
+      message("Checking if destination table exists...")
+      if(DBI::dbExistsTable(conn_to, name = DBI::Id(schema = table_df[i, "to_schema"], table = table_df[i, "to_table"])) == T) {
+        message("Destination table exists. Pulling data from destination table to compare with source table...")
+        data_to <- DBI::dbGetQuery(conn_to, 
+                                   glue::glue_sql("SELECT * FROM {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`}",
+                                                  .con = conn_to))
+        if(nrow(data_to) == 0) {
+          table_match <- F
         } else {
-          dts <- delete_table_suffix
-          dts_num <- 0
-          # Checks if there is already a "to_delete" table with the same name. If so, keep adding a number to the end until you are renaming to a new table.
-          while(DBI::dbExistsTable(conn_to, name = DBI::Id(schema = table_df[i, "to_schema"], table = paste0(table_df[i, "to_table"], dts))) == T) {
-            dts_num <- dts_num + 1
-            dts <- paste0(delete_table_suffix, "_", dts_num)
-          }
-          message(glue::glue("Renaming old destination table to [{table_df[i, 'to_schema']}].[{paste0(table_df[i, 'to_table'], dts)}]..."))
-          # Attempts to rename table with sytax for standard databases. If that fails, rename table with syntax that is used in an Azure Synapse environment.
-          tryCatch(
-            {
-              DBI::dbExecute(conn_to,
-                             glue::glue_sql("EXEC sp_rename {paste0(table_df[i, 'to_schema'], '.', table_df[i, 'to_table'])}, {paste0(table_df[i, 'to_table'], dts)}",
-                                            .con = conn_to))
-            },
-            error = function(cond) {
-              DBI::dbExecute(conn_to,
-                             glue::glue_sql("RENAME OBJECT {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`} TO {`{paste0(table_df[i, 'to_table'], dts)}`}",
-                                            .con = conn_to))    
-            }
-          )
+          suppressWarnings(table_match <- dplyr::all_equal(data_from, data_to, ignore_col_order = F))
         }
+        if(table_match == T) {
+          message("Destination table matches source table...")
+          next
+        } else {
+          message("Destination table does not match source table...")
+          if(delete_table == T) {
+            message("Deleting old destination table...")
+            DBI::dbExecute(conn_to,
+                          glue::glue_sql("DROP TABLE {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`}",
+                                          .con = conn_to))
+          } else {
+            dts <- delete_table_suffix
+            dts_num <- 0
+            # Checks if there is already a "to_delete" table with the same name. If so, keep adding a number to the end until you are renaming to a new table.
+            while(DBI::dbExistsTable(conn_to, name = DBI::Id(schema = table_df[i, "to_schema"], table = paste0(table_df[i, "to_table"], dts))) == T) {
+              dts_num <- dts_num + 1
+              dts <- paste0(delete_table_suffix, "_", dts_num)
+            }
+            message(glue::glue("Renaming old destination table to [{table_df[i, 'to_schema']}].[{paste0(table_df[i, 'to_table'], dts)}]..."))
+            # Attempts to rename table with sytax for standard databases. If that fails, rename table with syntax that is used in an Azure Synapse environment.
+            tryCatch(
+              {
+                DBI::dbExecute(conn_to,
+                              glue::glue_sql("EXEC sp_rename {paste0(table_df[i, 'to_schema'], '.', table_df[i, 'to_table'])}, {paste0(table_df[i, 'to_table'], dts)}",
+                                              .con = conn_to))
+              },
+              error = function(cond) {
+                DBI::dbExecute(conn_to,
+                              glue::glue_sql("RENAME OBJECT {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`} TO {`{paste0(table_df[i, 'to_table'], dts)}`}",
+                                              .con = conn_to))    
+              }
+            )
+          }
+        }
+      } else {
+        message("Destination table does not exist...")
       }
-    } else {
-      message("Destination table does not exist...")
-    }
-    cols_from <- DBI::dbGetQuery(conn_from,
-                                   glue::glue_sql("
-                                                SELECT 
+      cols_from <- DBI::dbGetQuery(conn_from,
+                                    glue::glue_sql("
+                                                  SELECT 
                                                   [COLUMN_NAME],
                                                   [DATA_TYPE],
                                                   [CHARACTER_MAXIMUM_LENGTH],
@@ -192,42 +194,75 @@ table_duplicate_f <- function(conn_from,
                                                   [TABLE_NAME] = {table_df[i, 'from_table']}
                                                   AND [TABLE_SCHEMA] = {table_df[i, 'from_schema']}
                                                 ORDER BY [ORDINAL_POSITION]",
-                                                  .con = conn_from))
+                                                   .con = conn_from))
+      message("Creating destination table...")
+      create_code <- glue::glue_sql(
+        "CREATE TABLE {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`}
+        ({DBI::SQL(glue::glue_collapse(glue::glue_sql('{DBI::SQL(cols_from$COLUMN_DEFINITION)}',.con = conn_to), sep = ', \n  '))})", 
+        .con = conn_to)
+    
+      DBI::dbExecute(conn_to, create_code)
+      message("Copying source data to destination table...")
+      data_from <- dplyr::mutate_all(data_from, as.character)
+      if(length(keyring::key_list(server_to)[["username"]]) == 0) {
+        u <- NULL
+        p <- NULL
+      } else {
+        u <- keyring::key_list(server_to)[["username"]]
+        p <- keyring::key_get(server_to, keyring::key_list(server_to)[["username"]])
+      }
+      load_bcp_f(dataset = data_from,
+                server = server_to,
+                db_name = db_to,
+                schema_name = table_df[i, "to_schema"],
+                table_name = table_df[i, "to_table"],
+                user = u,
+                pass = p)
+      message("Table duplication complete...")
+    }
+  } else {
+    message(glue::glue("Table {i}: [{table_df[i, 'from_schema']}].[{table_df[i, 'from_table']}] -> [{table_df[i, 'to_schema']}].[{table_df[i, 'to_table']}]"))
+    cols_from <- DBI::dbGetQuery(conn_from,
+                               glue::glue_sql("
+                                                  SELECT 
+                                                  [COLUMN_NAME],
+                                                  [DATA_TYPE],
+                                                  [CHARACTER_MAXIMUM_LENGTH],
+                                                  [NUMERIC_PRECISION],
+                                                  [NUMERIC_SCALE],
+                                                  [CHARACTER_SET_NAME],
+                                                  [COLLATION_NAME],
+                                                  CONCAT(
+                                                    '[', [COLUMN_NAME], '] ', 
+                                                    UPPER([DATA_TYPE]), 
+	                                                  CASE
+                                                  		WHEN [DATA_TYPE] IN('VARCHAR', 'CHAR', 'NVARCHAR') THEN CONCAT('(',CASE
+                                                  		                                                                    WHEN [CHARACTER_MAXIMUM_LENGTH] = -1 THEN 'MAX'
+                                                  		                                                                    ELSE CAST([CHARACTER_MAXIMUM_LENGTH] AS VARCHAR(4))
+                                                  		                                                                  END
+                                                  		                                                                  , ') COLLATE ', [COLLATION_NAME])
+                                                  		WHEN [DATA_TYPE] IN('DECIMAL', 'NUMERIC') THEN CONCAT('(', [NUMERIC_PRECISION], ',', [NUMERIC_SCALE], ')')
+                                                  		ELSE ''
+                                                  	END,
+	                                                  ' NULL') AS 'COLUMN_DEFINITION'
+                                                FROM [INFORMATION_SCHEMA].[COLUMNS]
+                                                WHERE 
+                                                  [TABLE_NAME] = {table_df[i, 'from_table']}
+                                                  AND [TABLE_SCHEMA] = {table_df[i, 'from_schema']}
+                                                ORDER BY [ORDINAL_POSITION]",
+                                              .con = conn_from))
     message("Creating destination table...")
     create_code <- glue::glue_sql(
       "CREATE TABLE {`table_df[i, 'to_schema']`}.{`table_df[i, 'to_table']`}
-      ({DBI::SQL(glue::glue_collapse(glue::glue_sql('{DBI::SQL(cols_from$COLUMN_DEFINITION)}',.con = conn_to), sep = ', \n  '))})", 
+        ({DBI::SQL(glue::glue_collapse(glue::glue_sql('{DBI::SQL(cols_from$COLUMN_DEFINITION)}',.con = conn_to), sep = ', \n  '))})", 
       .con = conn_to)
-    
+  
     DBI::dbExecute(conn_to, create_code)
-    message("Copying source data to destination table...")
-#    DBI::dbWriteTable(conn_to, 
-#                      name = DBI::Id(schema = table_df[i, "to_schema"], table = table_df[i, "to_table"]), 
-#                      value = data_from,
-#                      append = T)
-#    DBI::sqlAppendTable(conn_to,
-#                        table = DBI::Id(schema = table_df[i, "to_schema"], table = table_df[i, "to_table"]), 
-#                        value = data_from,
-#                        row.names = F)
-    data_from <- dplyr::mutate_all(data_from, as.character)
-    if(length(keyring::key_list(server_to)[["username"]]) == 0) {
-      u <- NULL
-      p <- NULL
-    } else {
-      u <- keyring::key_list(server_to)[["username"]]
-      p <- keyring::key_get(server_to, keyring::key_list(server_to)[["username"]])
-    }
-    load_bcp_f(dataset = data_from,
-               server = server_to,
-               db_name = db_to,
-               schema_name = table_df[i, "to_schema"],
-               table_name = table_df[i, "to_table"],
-               user = u,
-               pass = p)
-    message("Table duplication complete...")
   }
   message("All tables duplicated successfully.")
 }
+
+
 
 #### PARAMETERS ####
 # conn = name of the connection to the SQL database
