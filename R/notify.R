@@ -1,7 +1,7 @@
 # apde_notify_set_cred_f() ----
 #' @title Set Outlook Credentials for APDE Notify
 #' @description Creates and stores Outlook credentials for use with APDE Notify functions.
-#' @importFrom svDialogs dlgInput
+#' @importFrom svDialogs dlg_input
 #' @importFrom blastula create_smtp_creds_key
 #' @return None
 #' @export
@@ -12,7 +12,7 @@
 apde_notify_set_cred_f <- function() {
   ## CREATING THE OUTLOOK CREDENTIAL
   ## ENTER EMAIL ADDRESS
-  email <- svDialogs::dlg_Input("Enter Email address:", paste0(Sys.info()["user"], "@kingcounty.gov"))$res
+  email <- svDialogs::dlg_input("Enter Email address:", paste0(Sys.info()["user"], "@kingcounty.gov"))$res
   ## ENTERE YOUR PW IN POP UP
   blastula::create_smtp_creds_key(
     id = "outlook",
