@@ -426,15 +426,15 @@ apde_notify_f <- function(msg_id = NULL,
   msg <- apde_notify_msg_get_f(msg_id = msg_id)
   email_list <- apde_notify_list_get_f(msg_id = msg_id)
   vars <- as.list(vars)
-  email <- compose_email(
+  email <- blastula::compose_email(
     body = blastula::md(glue::glue(msg$msg_body)))
-  email %>%
-    smtp_send(
-      to = email_list$address,
-      from = msg$msg_from,
-      subject = glue::glue(msg$msg_subject),
-      credentials = creds_key("outlook")
-    )
+  blastula::smtp_send(
+    email = email,
+    to = email_list$address,
+    from = msg$msg_from,
+    subject = glue::glue(msg$msg_subject),
+    credentials = blastula::creds_key("outlook")
+  )
 }
 
 # apde_notify_menu_f() ----
