@@ -12,9 +12,9 @@
 apde_notify_set_cred_f <- function() {
   ## CREATING THE OUTLOOK CREDENTIAL
   ## ENTER EMAIL ADDRESS
-  email <- dlgInput("Enter Email address:", paste0(Sys.info()["user"], "@kingcounty.gov"))$res
+  email <- svDialogs::dlg_Input("Enter Email address:", paste0(Sys.info()["user"], "@kingcounty.gov"))$res
   ## ENTERE YOUR PW IN POP UP
-  create_smtp_creds_key(
+  blastula::create_smtp_creds_key(
     id = "outlook",
     user = email,
     provider = "outlook",
@@ -453,71 +453,71 @@ apde_notify_menu_f <- function() {
   address_list <- apde_notify_addresses_get_f()
   current_list <- NA
   
-  ui <- fluidPage(
-    titlePanel("APDE Notify Menu"),
-    fluidRow(
-      column(4, 
-        selectInput(inputId = "msg_select", label = "Select Message",                
+  ui <- shiny::fluidPage(
+    shiny::titlePanel("APDE Notify Menu"),
+    shiny::fluidRow(
+      shiny::column(4, 
+        shiny::selectInput(inputId = "msg_select", label = "Select Message",                
                     choices = c("New Message", as.list(apde_notify_msgs_get_f()$msg_name))),
-        textInput(inputId = "msg_name_text", label = "Message Name"),
-        textInput(inputId = "msg_subject_text", label = "Message Subject"),
-        textInput(inputId = "msg_from_text", label = "Message From Address"),
-        textAreaInput(inputId = "msg_body_textarea", label = "Message Body", 
+        shiny::textInput(inputId = "msg_name_text", label = "Message Name"),
+        shiny::textInput(inputId = "msg_subject_text", label = "Message Subject"),
+        shiny::textInput(inputId = "msg_from_text", label = "Message From Address"),
+        shiny::textAreaInput(inputId = "msg_body_textarea", label = "Message Body", 
                       height = 200),
-        actionButton(inputId = "msg_save_btn", label = "Save Message")
+        shiny::actionButton(inputId = "msg_save_btn", label = "Save Message")
       ),
-      column(8, 
+      shiny::column(8, 
         shinyWidgets::multiInput(inputId = "multi_list", label = "Email List",
                    width = 600, choices = as.list(address_list$address)),
-        actionButton(inputId = "list_save_btn", label = "Save Email List"),
-        hr(),
-        selectInput(inputId = "address_select", label = "Select Email Address",
+        shiny::actionButton(inputId = "list_save_btn", label = "Save Email List"),
+        shiny::hr(),
+        shiny::selectInput(inputId = "address_select", label = "Select Email Address",
                 choices = c("New Email Address", as.list(address_list$address))),
-        textInput(inputId = "address_text", label = "Email Address"),
-        actionButton(inputId = "address_save_btn", label = "Save Email Address")
+        shiny::textInput(inputId = "address_text", label = "Email Address"),
+        shiny::actionButton(inputId = "address_save_btn", label = "Save Email Address")
       )
     ),
-    fluidRow(
-      column(10, offset = 1,
-             hr(),
-             textOutput("output_msg"),
-             hr(),
+    shiny::fluidRow(
+      shiny::column(10, offset = 1,
+                    shiny::hr(),
+                    shiny::textOutput("output_msg"),
+                    shiny::hr(),
              )
     )
   )
   
   server <- function(input, output, session) {
-    text_reactive <- reactiveValues(text = "")
+    text_reactive <- shiny::reactiveValues(text = "")
     
-    observeEvent(input$msg_select, {
+    shiny::observeEvent(input$msg_select, {
       if(input$msg_select != "New Message") {
         msg_id <- apde_notify_msg_id_get_f(msg_name = input$msg_select)
         current_list <- apde_notify_list_get_f(msg_id = msg_id)
         msg <- apde_notify_msg_get_f(msg_id = msg_id)
-        updateTextInput(session = session,
+        shiny::updateTextInput(session = session,
                         inputId = "msg_name_text",
                         value = msg$msg_name)
-        updateTextInput(session = session,
+        shiny::updateTextInput(session = session,
                         inputId = "msg_subject_text",
                         value = msg$msg_subject)
-        updateTextInput(session = session,
+        shiny::updateTextInput(session = session,
                         inputId = "msg_from_text",
                         value = msg$msg_from)
-        updateTextAreaInput(session = session,
+        shiny::updateTextAreaInput(session = session,
                             inputId = "msg_body_textarea",
                             value = msg$msg_body)
       } else { 
         current_list = c() 
-        updateTextInput(session = session,
+        shiny::updateTextInput(session = session,
                         inputId = "msg_name_text",
                         value = NA)
-        updateTextInput(session = session,
+        shiny::updateTextInput(session = session,
                         inputId = "msg_subject_text",
                         value = NA)
-        updateTextInput(session = session,
+        shiny::updateTextInput(session = session,
                         inputId = "msg_from_text",
                         value = NA)
-        updateTextAreaInput(session = session,
+        shiny::updateTextAreaInput(session = session,
                             inputId = "msg_body_textarea",
                             value = NA)
         
@@ -530,7 +530,7 @@ apde_notify_menu_f <- function() {
                                      selected = as.list(current_list$address))
     })
     
-    observeEvent(input$msg_save_btn, {
+    shiny::observeEvent(input$msg_save_btn, {
       if(input$msg_select == "New Message") {
         msg_id <- 0
       } else {
@@ -547,13 +547,13 @@ apde_notify_menu_f <- function() {
       } else {
         text_reactive$text <- paste0("Message: '", input$msg_name_text, "' updated - ", Sys.time())
       }
-      updateSelectInput(session = session,
+      shiny::updateSelectInput(session = session,
                         inputId = "msg_select",                 
                         choices = c("New Message", as.list(apde_notify_msgs_get_f()$msg_name)),
                         selected = mname)
     })
     
-    observeEvent(input$list_save_btn, {
+    shiny::observeEvent(input$list_save_btn, {
       if(input$msg_select != "New Message") {
         msg_id <- apde_notify_msg_id_get_f(msg_name = input$msg_select)
         apde_notify_list_set_f(msg_id = msg_id, 
@@ -564,19 +564,19 @@ apde_notify_menu_f <- function() {
       }
     })
     
-    observeEvent(input$address_select, {
+    shiny::observeEvent(input$address_select, {
       if(input$address_select != "New Email Address") {
-        updateTextInput(session = session,
+        shiny::updateTextInput(session = session,
                         inputId = "address_text",
                         value = input$address_select)
       } else {
-        updateTextInput(session = session,
+        shiny::updateTextInput(session = session,
                         inputId = "address_text",
                         value = NA)
       }
     })
     
-    observeEvent(input$address_save_btn, {
+    shiny::observeEvent(input$address_save_btn, {
       if(input$address_select != "New Email Address") {
         print(input$address_select)
         address_id <- apde_notify_address_id_get_f(address = input$address_select)
@@ -601,16 +601,16 @@ apde_notify_menu_f <- function() {
                                                                                inputId = "multi_list",
                                                                                choices = as.list(address_list$address),
                                                                                selected = as.list(current_list$address))
-      updateSelectInput(session = session,
+      shiny::updateSelectInput(session = session,
                         inputId = "address_select",                 
                         choices = c("New Email Address", as.list(address_list$address)),
                         selected = address)
     })
     
-    output$output_msg <- renderText({ text_reactive$text })
+    output$output_msg <- shiny::renderText({ text_reactive$text })
   }
   
-  shinyApp(ui = ui, server = server)
+  shiny::shinyApp(ui = ui, server = server)
 }
 
 
