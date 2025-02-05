@@ -34,9 +34,6 @@
 #'   df <- data.frame(id = 1:5, name = c("Alice", "Bob", "Charlie", "David", "Eve"))
 #'   load_df_bcp_f(df, "SQLSERVER01", "MyDatabase", "MySchema", "MyTable")
 #'   
-#'   # Load data from a file
-#'   load_df_bcp_f("C:/data/mydata.txt", "SQLSERVER01", "MySchema", "dbo", "MyTable")
-#'   
 #'   # Load data using SQL Server authentication
 #'   load_df_bcp_f(df, "SQLSERVER01", "MyDatabase", "dbo", "MyTable", 
 #'             user = "myuser", pass = "mypassword")
