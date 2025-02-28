@@ -18,6 +18,8 @@
 #' @importFrom odbc odbc
 #' @importFrom keyring key_list key_get
 #' 
+#' @export
+#' 
 
 
 #### FUNCTION ####

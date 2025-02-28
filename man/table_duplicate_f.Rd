@@ -17,7 +17,8 @@ table_duplicate_f(
   to_table_prefix = NULL,
   confirm_tables = T,
   delete_table = F,
-  delete_table_suffix = "_dupe_table_to_delete"
+  delete_table_suffix = "_dupe_table_to_delete",
+  table_structure_only = F
 )
 }
 \arguments{
@@ -57,6 +58,9 @@ will rename old TO tables}
 
 \item{delete_table_suffix}{Variable of a suffix to be added after the name of 
 old TO tables}
+
+\item{table_structure_only}{If \code{TRUE}, will only copy the table structure
+of old TO new tables}
 }
 \value{
 None

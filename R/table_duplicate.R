@@ -45,8 +45,6 @@
 #'  }
 #'  
 
-devtools::source_url("https://raw.githubusercontent.com/PHSKC-APDE/apde/main/R/load_df_bcp.R")
-
 table_duplicate_f <- function(conn_from,
                               conn_to,
                               server_to,
