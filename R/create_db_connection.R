@@ -45,6 +45,7 @@ create_db_connection <- function(server = c("phextractstore", "hhsaw", "inthealt
   
 
   if (server == "phextractstore") {
+    odbc_sources <- odbcListDataSources()$name
     if (prod == T & "PHExtractStoreProd" %in% odbc_sources) {
       conn <- DBI::dbConnect(odbc::odbc(), "PHExtractStoreProd")
     }
