@@ -40,6 +40,7 @@ Remotes:
     github::PHSKC-APDE/rads.data, github::PHSKC-APDE/rads
 Suggests: 
     markdown,
+    mockery,
     testthat
 VignetteBuilder: 
     knitr
