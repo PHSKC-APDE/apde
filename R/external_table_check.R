@@ -98,7 +98,7 @@ external_table_check_f <- function(conn,
                                                 ORDER BY [ORDINAL_POSITION]",
                                                 .con = conn_ext))
   # Compare all columns, column types, lengths, precision, etc.
-  result <- dplyr::all_equal(source_cols, external_cols, ignore_col_order = F, ignore_row_order = F)
+  result <- all.equal(source_cols, external_cols)
   
   # If everything matches, end function and return TRUE
   if(result == TRUE) {
