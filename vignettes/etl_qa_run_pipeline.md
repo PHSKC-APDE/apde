@@ -61,8 +61,11 @@ dates.<br><br> <img src="etl_qa_date.jpg" id="fig-date" />
 This graph shows the proportion of observations with a given value at
 each time period. It displays the top eight most frequent values PLUS
 missing values (dotted line) PLUS all other values combined and labeled
-‘Other values’. Note that numeric and date variables with six or fewer
-distinct values will be treated as a categorical.<br><br>
+‘Other values’. Note that numeric and date variables with fewer than or
+equal to your specified `distinct_threshold` unique values will be
+treated as categorical. This threshold (default = 1) is particularly
+useful for controlling how ordinal variables or numeric codes with
+limited values are analyzed.<br><br>
 <img src="etl_qa_categorical.jpg" id="fig-categorical" />
 
 ## Tables
@@ -102,9 +105,9 @@ Similarly, here is a sample from the ‘values’ worksheet
 
 | time_period | varname | value | count | proportion | abs_proportion_change | vartype | mean | median | min | max | rel_mean_change | rel_median_change | median_date | min_date | max_date |
 |---:|:---|:---|---:|---:|:---|:---|---:|---:|---:|---:|:---|:---|:---|:---|:---|
-| 2020 | mother_date_of_birth | NA | NA | NA | NA | Date | NA | NA | NA | NA | NA | NA | 1989-12-03 | 1955-09-03 | 2007-07-07 |
-| 2021 | mother_date_of_birth | NA | NA | NA | NA | Date | NA | NA | NA | NA | NA | NA | 1990-09-11 | 1958-02-28 | 2010-01-03 |
-| 2022 | mother_date_of_birth | NA | NA | NA | NA | Date | NA | NA | NA | NA | NA | NA | 1991-07-24 | 1965-09-28 | 2010-04-23 |
+| 2020 | nonseattle | Seattle | 6763 | 0.080 | NA | Categorical | NA | NA | NA | NA | NA | NA | NA | NA | NA |
+| 2021 | nonseattle | Seattle | 6498 | 0.076 | NA | Categorical | NA | NA | NA | NA | NA | NA | NA | NA | NA |
+| 2022 | nonseattle | Seattle | 6179 | 0.073 | NA | Categorical | NA | NA | NA | NA | NA | NA | NA | NA | NA |
 | 2013 | num_prev_cesarean | NA | NA | NA | NA | Continuous | 0.180 | 0 | 0 | 9 | NA | NA | NA | NA | NA |
 | 2014 | num_prev_cesarean | NA | NA | NA | NA | Continuous | 0.188 | 0 | 0 | 8 | 4.6% | NA | NA | NA | NA |
 | 2015 | num_prev_cesarean | NA | NA | NA | NA | Continuous | 0.190 | 0 | 0 | 8 | NA | NA | NA | NA | NA |
@@ -119,19 +122,19 @@ sheet called ‘chi_standards’ (`myresult$final$chi_standards`). It
 provides a simple ‘\*’ to indicate when there is a misalignment between
 the CHI standard and your data.
 
-| chi_year | varname    | group    | your_data | chi | problem |
-|---------:|:-----------|:---------|----------:|----:|:--------|
-|     2019 | chi_race_7 | Black    |         1 |   1 | NA      |
-|     2020 | chi_race_7 | Black    |         1 |   1 | NA      |
-|     2021 | chi_race_7 | Black    |         1 |   1 | NA      |
-|     2022 | chi_race_7 | Black    |         1 |   1 | NA      |
-|       NA | chi_race_7 | Hispanic |         0 |   1 | \*      |
-|     2013 | chi_race_7 | Multiple |         1 |   1 | NA      |
-|     2014 | chi_race_7 | Multiple |         1 |   1 | NA      |
-|     2015 | chi_race_7 | Multiple |         1 |   1 | NA      |
-|     2016 | chi_race_7 | Multiple |         1 |   1 | NA      |
+| chi_year | varname | group    | your_data | chi | problem |
+|---------:|:--------|:---------|----------:|----:|:--------|
+|     2019 | race3   | Black    |         1 |   1 | NA      |
+|     2020 | race3   | Black    |         1 |   1 | NA      |
+|     2021 | race3   | Black    |         1 |   1 | NA      |
+|     2022 | race3   | Black    |         1 |   1 | NA      |
+|       NA | race3   | Hispanic |         0 |   1 | \*      |
+|     2013 | race3   | Multiple |         1 |   1 | NA      |
+|     2014 | race3   | Multiple |         1 |   1 | NA      |
+|     2015 | race3   | Multiple |         1 |   1 | NA      |
+|     2016 | race3   | Multiple |         1 |   1 | NA      |
 
-Now that you’ve learned what this function can can, let’s learn how to
+Now that you’ve learned what this function can do, let’s learn how to
 use it!
 
 # Setting up the environment
@@ -157,7 +160,7 @@ Character string specifying the type of data source. Must be one of
 
 ## `connection`
 
-A DBIConnection object.<br>**Required only when
+A DBI Connection object.<br>**Required only when
 `data_source_type = 'sql_server'`**.
 
 ## `data_params`
@@ -169,9 +172,9 @@ for details.
 - ### `data_params$check_chi`
 
   Logical vector of length 1. When `check_chi = TRUE`, function will add
-  any available CHI related variables to `data_params$cols` and will
-  assess whether their values align with standards in
-  `rads.data::misc_chi_byvars`.<br>Default is `check_chi = FALSE`.
+  any available CHI related variables to `data_params$cols` and, if they
+  are categorical, will assess whether their values align with standards
+  in `rads.data::misc_chi_byvars`.<br>Default is `check_chi = FALSE`.
 
 - ### `data_params$cols`
 
@@ -248,6 +251,13 @@ Numeric threshold for flagging *relative* percentage changes in *means*
 and *medians*. Permissible range is \[0, 100\].<br>Default is
 `rel_threshold = 2`.
 
+## `distinct_threshold`
+
+Integer specifying the minimum number of unique values needed for a
+numeric or date variable to be analyzed as such. Variables with fewer
+distinct values will be treated as categoricals.<br>Default is
+`distinct_threshold = 1`.
+
 # Examples
 
 As stated above, this function can QA data in SQL Server, a local
@@ -271,6 +281,7 @@ qaSQL <- etl_qa_run_pipeline(
             'num_prev_cesarean', 'mother_date_of_birth'), 
     check_chi = TRUE
   ), 
+  distinct_threshold = 6,
   output_directory = tempdir()
 )
 ```
@@ -284,21 +295,20 @@ qaSQL <- etl_qa_run_pipeline(
     standards but are missing from your dataset. Please ensure your dataset complies with
     the CHI standard.
 
-    |    varname|group        |note                                                      |
-    |----------:|:------------|:---------------------------------------------------------|
-    | chi_race_7|Hispanic     |It's OK! A race variable cannot also represent ethnicity. |
-    |      race3|Hispanic     |It's OK! A race variable cannot also represent ethnicity. |
-    |      race3|Non-Hispanic |It's OK! A race variable cannot also represent ethnicity. |
+    | varname|group        |note                                                      |
+    |-------:|:------------|:---------------------------------------------------------|
+    |   race3|Hispanic     |It's OK! A race variable cannot also represent ethnicity. |
+    |   race3|Non-Hispanic |It's OK! A race variable cannot also represent ethnicity. |
 
     Preparing results ... running etl_qa_final_results()
 
     Visualizing data ... running etl_qa_export_results()
 
-    Finished! Check your output_directory: C:\Users\DCOLOM~1.KC\AppData\Local\Temp\RtmpyIyuUr
+    Finished! Check your output_directory: C:\Users\DCOLOM~1.KC\AppData\Local\Temp\RtmpgRpGYy
 
 Since we set `check_chi = TRUE`, the function pulled in all available
 CHI related variables and compared them to known standards. In this
-case, it identified three deviations between the birth data and the CHI
+case, it identified two deviations between the birth data and the CHI
 standards. However, these are known issues that are related to
 conception of the CHI variables rather than a data processing issue, so
 there is a `note` letting the user know not to worry about the
@@ -312,25 +322,17 @@ which is `tempdir()`. Let’s see what is saved there:
 list.files(tempdir())
 ```
 
-     [1] "birth.final_analytic_qa_2024_10_04.xlsx"       
-     [2] "birth.final_analytic_qa_missing_2024_10_04.pdf"
-     [3] "birth.final_analytic_qa_values_2024_10_04.pdf" 
-     [4] "file109410de117e"                              
-     [5] "file109412717fc4"                              
-     [6] "file109412ae2594"                              
-     [7] "file109412f824f7"                              
-     [8] "file10941c9941ee"                              
-     [9] "file109436734218"                              
-    [10] "file109438ac984"                               
-    [11] "file10944e342276"                              
-    [12] "Rf109428a2405d"                                
+    [1] "birth.final_analytic_qa_2025_05_07.xlsx"       
+    [2] "birth.final_analytic_qa_missing_2025_05_07.pdf"
+    [3] "birth.final_analytic_qa_values_2025_05_07.pdf" 
 
-- `birth.final_analytic_qa_missing_2024_09_30.pdf` contains graphs like
-  the one showin in Figure 1.
-- `birth.final_analytic_qa_values_2024_09_30.pdf` contains the graphs
+- **birth.final_analytic_qa_missing_2025_05_07.pdf** contains graphs
+  like the one showin in Figure 1.
+- **birth.final_analytic_qa_values_2025_05_07.pdf** contains the graphs
   like those in Figures 2a, 2b, and 2c.
-- `birth.final_analytic_qa_2024_09_30.xlsx` contains three worksheeets,
-  one for each of the three tables given in the Tables section above.
+- **birth.final_analytic_qa_2025_05_07.xlsx** contains three
+  worksheeets, one for each of the three tables given in the Tables
+  section above.
 
 We also saved the output as the object `qaSQL`. Let’s confirm that what
 was written about the returned object in the Sneak peek section above
@@ -374,6 +376,7 @@ qaDF <- etl_qa_run_pipeline(
              'num_prev_cesarean', 'mother_date_of_birth'), 
     check_chi = TRUE
   ), 
+  distinct_threshold = 6,
   output_directory = tempdir()
 )
 ```
@@ -393,6 +396,7 @@ qaRADS <- etl_qa_run_pipeline(
     kingco = FALSE,
     check_chi = TRUE
   ),
+  distinct_threshold = 6,
   output_directory = tempdir()
 )
 ```
@@ -400,13 +404,13 @@ qaRADS <- etl_qa_run_pipeline(
 ## Confirm that the results from each method are identical
 
 ``` r
-identical(qaDF$final, qaSQL$final)
+isTRUE(all.equal(qaDF$final, qaSQL$final))
 ```
 
     [1] TRUE
 
 ``` r
-identical(qaDF$final, qaRADS$final)
+isTRUE(all.equal(qaDF$final, qaRADS$final))
 ```
 
     [1] TRUE
@@ -416,4 +420,4 @@ identical(qaDF$final, qaRADS$final)
 Remember to consult the function documentation for more detailed
 information on usage and parameters. Happy coding!
 
-– *Updated by dcolombara, 2024-10-04*
+– *Updated by dcolombara, 2025-05-07*

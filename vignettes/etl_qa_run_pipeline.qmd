@@ -52,7 +52,7 @@ This graph shows basic statistics for *date* variables at each time period. Note
 
 ### Figure 2c: Categorical frequencies
 
-This graph shows the proportion of observations with a given value at each time period. It displays the top eight most frequent values PLUS missing values (dotted line) PLUS all other values combined and labeled 'Other values'. Note that numeric and date variables with six or fewer distinct values will be treated as a categorical.<br><br> ![](etl_qa_categorical.jpg){#fig-categorical}
+This graph shows the proportion of observations with a given value at each time period. It displays the top eight most frequent values PLUS missing values (dotted line) PLUS all other values combined and labeled 'Other values'. Note that numeric and date variables with fewer than or equal to your specified `distinct_threshold` unique values will be treated as categorical. This threshold (default = 1) is particularly useful for controlling how ordinal variables or numeric codes with limited values are analyzed.<br><br> ![](etl_qa_categorical.jpg){#fig-categorical}
 
 ## Tables
 
@@ -113,7 +113,7 @@ keepers <- (keepers - 4):(keepers + 4)
 pretty_kable(sample_chi[keepers])
 ```
 
-Now that you've learned what this function can can, let's learn how to use it!
+Now that you've learned what this function can do, let's learn how to use it!
 
 # Setting up the environment
 
@@ -135,7 +135,7 @@ Character string specifying the type of data source. Must be one of `'r_datafram
 
 ## `connection`
 
-A DBIConnection object.<br>**Required only when `data_source_type = 'sql_server'`**.
+A DBI Connection object.<br>**Required only when `data_source_type = 'sql_server'`**.
 
 ## `data_params`
 
@@ -145,7 +145,7 @@ List of data related parameters specific to the data source. Not all parameters 
 
     ### `data_params$check_chi`
 
-    Logical vector of length 1. When `check_chi = TRUE`, function will add any available CHI related variables to `data_params$cols` and will assess whether their values align with standards in `rads.data::misc_chi_byvars`.<br>Default is `check_chi = FALSE`.
+    Logical vector of length 1. When `check_chi = TRUE`, function will add any available CHI related variables to `data_params$cols` and, if they are categorical, will assess whether their values align with standards in `rads.data::misc_chi_byvars`.<br>Default is `check_chi = FALSE`.
 
 -   
 
@@ -215,6 +215,10 @@ Numeric threshold for flagging *absolute* percentage changes in *proportions.* P
 
 Numeric threshold for flagging *relative* percentage changes in *means* and *medians*. Permissible range is \[0, 100\].<br>Default is `rel_threshold = 2`.
 
+## `distinct_threshold`
+
+Integer specifying the minimum number of unique values needed for a numeric or date variable to be analyzed as such. Variables with fewer distinct values will be treated as categoricals.<br>Default is `distinct_threshold = 1`.
+
 # Examples
 
 As stated above, this function can QA data in SQL Server, a local data.table/ data.frame, or from `rads`. Here we provide an example of each method to QA the same data source. Since all three methods provide identical output, we will only explore the SQL Server QA in detail knowing that it is generalizable.
@@ -234,21 +238,26 @@ qaSQL <- etl_qa_run_pipeline(
             'num_prev_cesarean', 'mother_date_of_birth'), 
     check_chi = TRUE
   ), 
+  distinct_threshold = 6,
   output_directory = tempdir()
 )
 ```
 
-Since we set `check_chi = TRUE`, the function pulled in all available CHI related variables and compared them to known standards. In this case, it identified three deviations between the birth data and the CHI standards. However, these are known issues that are related to conception of the CHI variables rather than a data processing issue, so there is a `note` letting the user know not to worry about the discrepancy. I've hidden this message for the examples that follow to simplify this vignette.
+Since we set `check_chi = TRUE`, the function pulled in all available CHI related variables and compared them to known standards. In this case, it identified two deviations between the birth data and the CHI standards. However, these are known issues that are related to conception of the CHI variables rather than a data processing issue, so there is a `note` letting the user know not to worry about the discrepancy. I've hidden this message for the examples that follow to simplify this vignette.
 
 The final statement asks the user to check their `output_directory`, which is `tempdir()`. Let's see what is saved there:
 
-```{r echo=TRUE, results='show', warning=TRUE, message=TRUE}
+```{r echo=TRUE, results='hide', warning=FALSE, message=FALSE}
 list.files(tempdir())
 ```
 
--   `birth.final_analytic_qa_missing_2024_09_30.pdf` contains graphs like the one showin in Figure 1.
--   `birth.final_analytic_qa_values_2024_09_30.pdf` contains the graphs like those in Figures 2a, 2b, and 2c.
--   `birth.final_analytic_qa_2024_09_30.xlsx` contains three worksheeets, one for each of the three tables given in the Tables section above.
+```{r echo=FALSE, results='show', warning=FALSE, message=FALSE}
+list.files(tempdir(),  pattern = '.pdf|.xlsx')
+```
+
+-   **`r list.files(tempdir(), pattern = 'qa_missing')`** contains graphs like the one showin in Figure 1.
+-   **`r list.files(tempdir(), pattern = 'qa_value')`** contains the graphs like those in Figures 2a, 2b, and 2c.
+-   **`r list.files(tempdir(), pattern = '.xlsx')`** contains three worksheeets, one for each of the three tables given in the Tables section above.
 
 We also saved the output as the object `qaSQL`. Let's confirm that what was written about the returned object in the Sneak peek section above was correct:
 
@@ -281,6 +290,7 @@ qaDF <- etl_qa_run_pipeline(
              'num_prev_cesarean', 'mother_date_of_birth'), 
     check_chi = TRUE
   ), 
+  distinct_threshold = 6,
   output_directory = tempdir()
 )
 ```
@@ -300,6 +310,7 @@ qaRADS <- etl_qa_run_pipeline(
     kingco = FALSE,
     check_chi = TRUE
   ),
+  distinct_threshold = 6,
   output_directory = tempdir()
 )
 ```
@@ -307,8 +318,8 @@ qaRADS <- etl_qa_run_pipeline(
 ## Confirm that the results from each method are identical
 
 ```{r echo=TRUE, results='show', warning=TRUE, message=TRUE}
-identical(qaDF$final, qaSQL$final)
-identical(qaDF$final, qaRADS$final)
+isTRUE(all.equal(qaDF$final, qaSQL$final))
+isTRUE(all.equal(qaDF$final, qaRADS$final))
 ```
 
 # Conclusion
