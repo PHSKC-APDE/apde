@@ -12,7 +12,8 @@ etl_qa_run_pipeline(
   digits_mean = 3,
   digits_prop = 3,
   abs_threshold = 3,
-  rel_threshold = 2
+  rel_threshold = 2,
+  distinct_threshold = 1
 )
 }
 \arguments{
@@ -77,6 +78,11 @@ in proportions. Permissible range is [0, 100]. Default is \code{abs_threshold = 
 
 \item{rel_threshold}{Numeric threshold for flagging relative percentage changes 
 in means and medians. Permissible range is [0, 100]. Default is \code{rel_threshold = 2}.}
+
+\item{distinct_threshold}{Minimum number of distinct values needed for 
+calculating the minimum, mean, median, and maximum values. If the number of 
+distinct values is under this threshold, it will be treated as a categorical. Default is 
+\code{distinct_threshold = 1}.}
 }
 \value{
 A list containing the final results from the ETL QA pipeline. Specifically, it includes:
