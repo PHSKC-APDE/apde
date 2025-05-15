@@ -774,7 +774,7 @@ process_r_dataframe <- function(config) {
   # Comparison with CHI standards (if needed) ----
   if(isTRUE(config$data_params$check_chi)){
     # Get all gold standard CHI varnames and groups
-    chi_std <- rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)]
+    chi_std <- unique(rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)])
     
     # Identify all categorical chi variables that are in the data.frame/data.table
     categorical_cols <- setdiff(names(dt), c(config$time_var, numeric_cols, date_cols))
@@ -970,7 +970,9 @@ process_sql_server <- function(config) {
   # Comparison with CHI standards (if needed) ----
   if(isTRUE(config$data_params$check_chi)){
     # Get all gold standard CHI varnames and groups
-    chi_std <- rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)]
+    # use unique(...) because some varname group combos duplicated because birth 
+    # data has different `cat` than other data
+    chi_std <- unique(rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)])
     
     # Limit chi_std to categorical variables in frequency table
     chi_std <- chi_std[varname %in% unique(categorical_freq$varname)]
@@ -1025,7 +1027,6 @@ comp_2_chi_std <- function(myCHIcomparison){
   # Expects data.table with chi_year <integer>, varname <character>, group <character>, your_data <integer/logical>, chi <integer/logical>
   # Identify data in CHI standard table that is not in the dataset ----
   only_chi <- myCHIcomparison[your_data == 0][, list(varname, group)]
-  only_chi[varname == 'chi_race_7' & group == 'Hispanic', note := "It's OK! A race variable cannot also represent ethnicity."]
   only_chi[varname == 'race3' & group == 'Hispanic', note := "It's OK! A race variable cannot also represent ethnicity."]
   only_chi[varname == 'race3' & group == 'Non-Hispanic', note := "It's OK! A race variable cannot also represent ethnicity."]
   
