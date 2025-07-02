@@ -12,10 +12,10 @@ etl_qa_initial_results(config)
 \value{
 A list of raw analytic output. The table structure may differ slightly depending on the original data_source. The list items include:
   \item{missing_data}{The proportion of missing data for each variable and time point}
-  \item{vals_continuous}{The minimum, median, mean, and maximum for all numeric variables with > 6 distinct values}
-  \item{vals_date}{The minimum, median, and maximum for all date / datetime variables with > 6 distinct values}
+  \item{vals_continuous}{The minimum, median, mean, and maximum for all numeric variables with >= your specified \code{distinct_threshold} unique values}
+  \item{vals_date}{The minimum, median, and maximum for all date / datetime variables with >= your specified \code{distinct_threshold} unique values}
   \item{vals_categorical}{A frequency table of the top 8 most frequent values 
-        of categorical variable (and numerics or dates with <= 6 distinct values) PLUS a rows for \code{NA} 
+        of categorical variable (and numerics or dates with < your specified \code{distinct_threshold} distinct values) PLUS a rows for \code{NA} 
         PLUS a row for all 'Other values'}
   \item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on \code{rads.data::misc_chi_byvars}}
 }

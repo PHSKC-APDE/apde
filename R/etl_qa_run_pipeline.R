@@ -62,6 +62,10 @@
 #' in proportions. Permissible range is [0, 100]. Default is \code{abs_threshold = 3}.
 #' @param rel_threshold Numeric threshold for flagging relative percentage changes 
 #' in means and medians. Permissible range is [0, 100]. Default is \code{rel_threshold = 2}.
+#' @param distinct_threshold Minimum number of distinct values needed for 
+#' calculating the minimum, mean, median, and maximum values. If the number of 
+#' distinct values is under this threshold, it will be treated as a categorical. Default is 
+#' \code{distinct_threshold = 1}.
 #'
 #' @return A list containing the final results from the ETL QA pipeline. Specifically, it includes:
 #'   \item{config}{Configuration settings used for the analysis}
@@ -161,7 +165,8 @@ etl_qa_run_pipeline <- function(connection = NULL,
                                 digits_mean = 3,
                                 digits_prop = 3,
                                 abs_threshold = 3,
-                                rel_threshold = 2) {
+                                rel_threshold = 2, 
+                                distinct_threshold = 1) {
   # Set visible bindings for global variables
   
   # Capture the name of the data source if it's an R data.table/data.frame (annoying hack to extract name from within a list) ----
@@ -299,7 +304,8 @@ etl_qa_run_pipeline <- function(connection = NULL,
     digits_mean = digits_mean,
     digits_prop = digits_prop,
     abs_threshold = abs_threshold,
-    rel_threshold = rel_threshold
+    rel_threshold = rel_threshold, 
+    distinct_threshold  = distinct_threshold
   )
   
   # Step 2: Initial QA results ----
@@ -373,6 +379,8 @@ etl_qa_run_pipeline <- function(connection = NULL,
 #' @param digits_prop Integer specifying decimal places for proportion rounding
 #' @param abs_threshold Numeric threshold for flagging absolute changes
 #' @param rel_threshold Numeric threshold for flagging relative changes
+#' @param distinct_threshold Minimum number of distinct values needed for 
+#' calculating the minimum, median, and maximum values.
 #'
 #' @details
 #' This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
@@ -457,7 +465,8 @@ etl_qa_setup_config <- function(data_source_type,
                                 digits_mean = 0,
                                 digits_prop = 3,
                                 abs_threshold = 3,
-                                rel_threshold = 2) {
+                                rel_threshold = 2, 
+                                distinct_threshold = 1) {
   # Set visible bindings for global variables
   
   # Capture the name of the data.table/data.frame and add to params (need to do first, before any arguments evaluated or modified)
@@ -479,7 +488,7 @@ etl_qa_setup_config <- function(data_source_type,
     }
   } else {
     output_directory <- getwd()
-    warning("\U00026A0\nNo output_directory specified. Using current working directory: ", output_directory)
+    warning("\U00026A0\nNo output_directory specified. Using current working directory: ", output_directory, ".")
   }
   
   # Validate check_chi
@@ -500,7 +509,8 @@ etl_qa_setup_config <- function(data_source_type,
     digits_mean = digits_mean,
     digits_prop = digits_prop,
     abs_threshold = abs_threshold,
-    rel_threshold = rel_threshold
+    rel_threshold = rel_threshold, 
+    distinct_threshold = distinct_threshold 
   )
   
   # Add specific configurations based on data_source_type
@@ -575,10 +585,10 @@ etl_qa_setup_config <- function(data_source_type,
 #'
 #' @return A list of raw analytic output. The table structure may differ slightly depending on the original data_source. The list items include:
 #'   \item{missing_data}{The proportion of missing data for each variable and time point}
-#'   \item{vals_continuous}{The minimum, median, mean, and maximum for all numeric variables with > 6 distinct values}
-#'   \item{vals_date}{The minimum, median, and maximum for all date / datetime variables with > 6 distinct values}
+#'   \item{vals_continuous}{The minimum, median, mean, and maximum for all numeric variables with >= your specified \code{distinct_threshold} unique values}
+#'   \item{vals_date}{The minimum, median, and maximum for all date / datetime variables with >= your specified \code{distinct_threshold} unique values}
 #'   \item{vals_categorical}{A frequency table of the top 8 most frequent values 
-#'         of categorical variable (and numerics or dates with <= 6 distinct values) PLUS a rows for \code{NA} 
+#'         of categorical variable (and numerics or dates with < your specified \code{distinct_threshold} distinct values) PLUS a rows for \code{NA} 
 #'         PLUS a row for all 'Other values'}
 #'   \item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on \code{rads.data::misc_chi_byvars}}
 #'
@@ -711,7 +721,7 @@ process_r_dataframe <- function(config) {
   missing_data[, varname := as.character(varname)]
   
   # Calculate summary statistics for continuous variables ----
-  numeric_cols <- setdiff(names(dt)[sapply(dt, function(x) is.numeric(x) && length(unique(x)) > 6)], config$time_var) # identify numerics with > 6 values
+  numeric_cols <- setdiff(names(dt)[sapply(dt, function(x) is.numeric(x) && length(unique(x)) >= config$distinct_threshold)], config$time_var) # identify numerics with >= distinct_threshold unique values 
   
   if(length(numeric_cols) > 0){
     dt[, (numeric_cols) := lapply(.SD, as.double), .SDcols = numeric_cols]
@@ -728,7 +738,7 @@ process_r_dataframe <- function(config) {
     }
   
   # Calculate summary statistics for datetime ----
-  date_cols <- setdiff(names(dt)[sapply(dt, function(x) (inherits(x, "Date") || inherits(x, "POSIXt") || inherits(x, "POSIXct")) && length(unique(x)) > 6)], config$time_var)
+  date_cols <- setdiff(names(dt)[sapply(dt, function(x) (inherits(x, "Date") || inherits(x, "POSIXt") || inherits(x, "POSIXct")) && length(unique(x)) >= config$distinct_threshold)], config$time_var)
   
   if(length(date_cols) > 0){
     dt[, (date_cols) := lapply(.SD, as.Date), .SDcols = date_cols] # convert datetime to actual date
@@ -746,7 +756,7 @@ process_r_dataframe <- function(config) {
   }
   
   # Calculate categorical value frequencies ----
-  categorical_cols <- setdiff(names(dt), c(config$time_var, numeric_cols, date_cols)) # categorical and numeric with <= 6 unique values
+  categorical_cols <- setdiff(names(dt), c(config$time_var, numeric_cols, date_cols)) # categorical and numeric with <= distinct_threshol unique values
   
   if(length(categorical_cols) > 0){
     dt[, (categorical_cols) := lapply(.SD, as.character), .SDcols = categorical_cols]
@@ -764,12 +774,12 @@ process_r_dataframe <- function(config) {
   # Comparison with CHI standards (if needed) ----
   if(isTRUE(config$data_params$check_chi)){
     # Get all gold standard CHI varnames and groups
-    chi_std <- rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)]
+    chi_std <- unique(rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)])
     
-    # Identify all chi variables that are in the data.frame/data.table
-    chi_dtvars <- unique(intersect(names(dt), unique(chi_std$varname)))
-    chi_dtvars <- setdiff(chi_dtvars, 'chi_year') # remove chi_year because continuous
-    
+    # Identify all categorical chi variables that are in the data.frame/data.table
+    categorical_cols <- setdiff(names(dt), c(config$time_var, numeric_cols, date_cols))
+    chi_dtvars <- unique(intersect(categorical_cols, unique(chi_std$varname)))
+
     # Limit CHI gold standard table to just variables that are in the data.frame/data.table
     chi_std <- chi_std[varname %in% chi_dtvars]
     
@@ -960,9 +970,11 @@ process_sql_server <- function(config) {
   # Comparison with CHI standards (if needed) ----
   if(isTRUE(config$data_params$check_chi)){
     # Get all gold standard CHI varnames and groups
-    chi_std <- rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)]
+    # use unique(...) because some varname group combos duplicated because birth 
+    # data has different `cat` than other data
+    chi_std <- unique(rads.data::misc_chi_byvars[, list(varname, group, chi = 1L)])
     
-    # Limit chi_std to varnames in frequency table
+    # Limit chi_std to categorical variables in frequency table
     chi_std <- chi_std[varname %in% unique(categorical_freq$varname)]
     
     # Limit frequency table to CHI varnames
@@ -1015,7 +1027,6 @@ comp_2_chi_std <- function(myCHIcomparison){
   # Expects data.table with chi_year <integer>, varname <character>, group <character>, your_data <integer/logical>, chi <integer/logical>
   # Identify data in CHI standard table that is not in the dataset ----
   only_chi <- myCHIcomparison[your_data == 0][, list(varname, group)]
-  only_chi[varname == 'chi_race_7' & group == 'Hispanic', note := "It's OK! A race variable cannot also represent ethnicity."]
   only_chi[varname == 'race3' & group == 'Hispanic', note := "It's OK! A race variable cannot also represent ethnicity."]
   only_chi[varname == 'race3' & group == 'Non-Hispanic', note := "It's OK! A race variable cannot also represent ethnicity."]
   
@@ -1291,7 +1302,7 @@ generate_numeric_query <- function(config) {
     filtered_columns AS (
       SELECT varname
       FROM column_stats
-      WHERE distinct_count > 6
+      WHERE distinct_count >= {config$distinct_threshold}
     ),
     stats AS (
       SELECT
@@ -1399,7 +1410,7 @@ generate_date_query <- function(config) {
     filtered_columns AS (
       SELECT varname
       FROM column_stats
-      WHERE distinct_count > 6
+      WHERE distinct_count >= {config$distinct_threshold}
     ),
     stats AS (
       SELECT

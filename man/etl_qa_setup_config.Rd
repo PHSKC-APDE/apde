@@ -12,7 +12,8 @@ etl_qa_setup_config(
   digits_mean = 0,
   digits_prop = 3,
   abs_threshold = 3,
-  rel_threshold = 2
+  rel_threshold = 2,
+  distinct_threshold = 1
 )
 }
 \arguments{
@@ -31,6 +32,9 @@ etl_qa_setup_config(
 \item{abs_threshold}{Numeric threshold for flagging absolute changes}
 
 \item{rel_threshold}{Numeric threshold for flagging relative changes}
+
+\item{distinct_threshold}{Minimum number of distinct values needed for 
+calculating the minimum, median, and maximum values.}
 }
 \value{
 An S3 object of class "qa_data_config", which is a list containing the configuration settings.

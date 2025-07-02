@@ -1,7 +1,7 @@
 Package: apde
 Type: Package
 Title: Common functions used in APDE's work
-Version: 0.4.1
+Version: 0.4.3
 Author@R: c(
   person("Alastair", "Matheson", email = "alastair.matheson@kingcounty.gov", role = c("aut", "cre")))
 Author: Alastair Matheson [aut, cre]
@@ -39,6 +39,7 @@ Imports:
 Remotes:
     github::PHSKC-APDE/rads.data, github::PHSKC-APDE/rads
 Suggests: 
+    devtools, 
     markdown,
     mockery,
     testthat
