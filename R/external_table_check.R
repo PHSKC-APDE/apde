@@ -99,7 +99,9 @@ external_table_check_f <- function(conn,
                                                 .con = conn_ext))
   # Compare all columns, column types, lengths, precision, etc.
   result <- all.equal(source_cols, external_cols)
-  
+  if(length(result) > 1) {
+    result <- F
+  }
   # If everything matches, end function and return TRUE
   if(result == TRUE) {
     message(glue::glue("Source Table [{schema}].[{table}] Matches External Table [{schema_ext}].[{table_ext}]"))
