@@ -1,5 +1,7 @@
 # apde_utilities
-Common functions used throughout APDE for its work
+:warning: This repository has been archived! 
+
+Its successor is [apde.etl](https://github.com/PHSKC-APDE/apde.etl)
 
 ----------------------------
 
