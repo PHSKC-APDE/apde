@@ -12,13 +12,17 @@ Default is TRUE.}
 }
 \value{
 Invisibly returns a list with the following components:
-  \item{is_current}{Logical. TRUE if the installed version is the latest, FALSE otherwise.}
-  \item{local_version}{The version of the installed apde package.}
-  \item{remote_version}{The version on GitHub, or NULL if it couldn't be determined.}
-  \item{status}{Character string. The status of the check (e.g., "success", "error").}
-  \item{message}{Character string. Detailed message about the check result.}
+\item{is_current}{Logical. TRUE if the installed version is the latest, FALSE otherwise.}
+\item{local_version}{The version of the installed apde package.}
+\item{remote_version}{The version on GitHub, or NULL if it couldn't be determined.}
+\item{status}{Character string. The status of the check (e.g., "success", "error").}
+\item{message}{Character string. Detailed message about the check result.}
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+check_version() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:check_version]{apde.etl::check_version()}} instead.
+
 This function checks if the installed version of the apde package is the latest
 available on GitHub. It compares the local version with the version in the
 DESCRIPTION file on the main branch of the GitHub repository.

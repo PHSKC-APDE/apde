@@ -1,5 +1,5 @@
 # apde_utilities
-:warning: This repository has been archived! 
+:warning: This package has been deprecated and archived! 
 
 Its successor is [apde.etl](https://github.com/PHSKC-APDE/apde.etl)
 

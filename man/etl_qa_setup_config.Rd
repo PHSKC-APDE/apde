@@ -33,20 +33,24 @@ etl_qa_setup_config(
 
 \item{rel_threshold}{Numeric threshold for flagging relative changes}
 
-\item{distinct_threshold}{Minimum number of distinct values needed for 
+\item{distinct_threshold}{Minimum number of distinct values needed for
 calculating the minimum, median, and maximum values.}
 }
 \value{
 An S3 object of class "qa_data_config", which is a list containing the configuration settings.
 }
 \description{
-This function creates a configuration object for the ETL QA pipeline based on 
-the provided parameters. It is the first step called upon by 
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+etl_qa_setup_config() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:etl_qa_setup_config]{apde.etl::etl_qa_setup_config()}} instead.
+
+This function creates a configuration object for the ETL QA pipeline based on
+the provided parameters. It is the first step called upon by
 \code{\link{etl_qa_run_pipeline}}.
 }
 \details{
-This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
-\code{apde:::etl_qa_setup_config(...)}. The arguments are identical to those used 
+This is an \emph{internal function} accessible only by use of \code{:::}, for example,
+\code{apde:::etl_qa_setup_config(...)}. The arguments are identical to those used
 by \code{\link{etl_qa_run_pipeline}}. Please review that helpful for details.
 }
 \examples{

@@ -1,6 +1,11 @@
 # table_duplicate_f() ----
 #' @title copy a (smaller) SQL table from server to another 
-#' @description Made for smaller table, e.g., reference tables
+#' @description 
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' table_duplicate_f() was deprecated in apde 0.4.4. Please use [apde.etl::table_duplicate()] instead.
+#' 
+#' Made for smaller table, e.g., reference tables
 #' @author Jeremy Whitehurst, 2024-05-01
 #' 
 #' @param conn_from Name of the connection to the FROM SQL database
@@ -60,6 +65,13 @@ table_duplicate_f <- function(conn_from,
                               delete_table_suffix = "_dupe_table_to_delete",
                               table_structure_only = F
                               ) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "table_duplicate_f()", 
+    with = "apde.etl::table_duplicate()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   if(nrow(table_df) == 0) {
     # Check if table_df is empty. If it is, all from/to variables must be set.
     if(is.null(from_schema) || is.null(from_table)) {
@@ -349,6 +361,13 @@ table_duplicate_f <- function(conn_from,
 table_duplicate_delete_f <- function(conn,
                                      delete_table_suffix = "_dupe_table_to_delete"
                                      ) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "table_duplicate_delete_f()", 
+    with = "apde.etl::table_duplicate_delete()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
+  
   tables <- DBI::dbGetQuery(conn,
                             glue::glue_sql("SELECT * FROM [INFORMATION_SCHEMA].[TABLES]
                                            WHERE [TABLE_NAME] LIKE {paste0('%', delete_table_suffix, '%')}

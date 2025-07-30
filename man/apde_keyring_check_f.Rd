@@ -13,6 +13,10 @@ apde_keyring_check_f(keyring)
 A message indicating whether the keyring exists or has been created.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+apde_keyring_check_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:apde_keyring_check]{apde.etl::apde_keyring_check()}} instead.
+
 This function checks if a keyring exists and creates it if it does not.
 }
 \examples{

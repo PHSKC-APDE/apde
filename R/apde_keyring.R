@@ -1,6 +1,10 @@
 #' @title Set or Update a Keyring
 #'
 #' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' apde_keyring_set_f() was deprecated in apde 0.4.4. Please use [apde.etl::apde_keyring_set()] instead.
+#'  
 #' This function creates or updates a keyring with a specified username.
 #'
 #' @param keyring A character string specifying the name of the keyring. If not provided, a dialog will prompt for input.
@@ -16,6 +20,13 @@
 #' @export
 #' 
 apde_keyring_set_f <- function(keyring = NA){
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_keyring_set_f()", 
+    with = "apde.etl::apde_keyring_set()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )
+  
   username <- NA
   if(is.na(keyring)) {
     keyring <- svDialogs::dlgInput("Keyring:")$res
@@ -34,6 +45,11 @@ apde_keyring_set_f <- function(keyring = NA){
 
 #' Check and Create Keyring if Needed
 #'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' apde_keyring_check_f() was deprecated in apde 0.4.4. Please use [apde.etl::apde_keyring_check()] instead.
+#' 
 #' This function checks if a keyring exists and creates it if it does not.
 #'
 #' @param keyring A character string specifying the name of the keyring.
@@ -48,6 +64,12 @@ apde_keyring_set_f <- function(keyring = NA){
 #' @export
 #' 
 apde_keyring_check_f <- function(keyring){
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_keyring_check_f()", 
+    with = "apde.etl::apde_keyring_check()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )
   if(nrow(keyring::key_list(keyring)) == 0) {
     message(paste0("Keyring \"", keyring, "\" does not exist."))
     apde_keyring_set_f(keyring)

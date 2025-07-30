@@ -12,13 +12,17 @@ deduplicate_addresses(conn_hhsaw = NULL, conn_phclaims = NULL)
 \item{conn_phclaims}{SQL server connection to the PHClaims server, created using \code{odbc} package.}
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+deduplicate_addresses() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:deduplicate_addresses]{apde.etl::deduplicate_addresses()}} instead.
+
 \code{deduplicate_addresses} removes duplicate addresses in the ref tables and synchronize.
 }
 \details{
-This function brings in all addresses currently in the reference tables 
-and deduplicates them. Because there is a stage -> final workflow, the stage version 
+This function brings in all addresses currently in the reference tables
+and deduplicates them. Because there is a stage -> final workflow, the stage version
 of each table also needs to be deduplicated. Also, the reference tables are currently
-synchronized between two different servers. In order to avoid reintroducing 
-duplicates, both servers must be deduplicated (and synchronized at the same time). 
+synchronized between two different servers. In order to avoid reintroducing
+duplicates, both servers must be deduplicated (and synchronized at the same time).
 Server and table names are currently hard coded but could be made more generalized if needed.
 }

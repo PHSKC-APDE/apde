@@ -11,21 +11,25 @@ etl_qa_initial_results(config)
 }
 \value{
 A list of raw analytic output. The table structure may differ slightly depending on the original data_source. The list items include:
-  \item{missing_data}{The proportion of missing data for each variable and time point}
-  \item{vals_continuous}{The minimum, median, mean, and maximum for all numeric variables with >= your specified \code{distinct_threshold} unique values}
-  \item{vals_date}{The minimum, median, and maximum for all date / datetime variables with >= your specified \code{distinct_threshold} unique values}
-  \item{vals_categorical}{A frequency table of the top 8 most frequent values 
-        of categorical variable (and numerics or dates with < your specified \code{distinct_threshold} distinct values) PLUS a rows for \code{NA} 
-        PLUS a row for all 'Other values'}
-  \item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on \code{rads.data::misc_chi_byvars}}
+\item{missing_data}{The proportion of missing data for each variable and time point}
+\item{vals_continuous}{The minimum, median, mean, and maximum for all numeric variables with >= your specified \code{distinct_threshold} unique values}
+\item{vals_date}{The minimum, median, and maximum for all date / datetime variables with >= your specified \code{distinct_threshold} unique values}
+\item{vals_categorical}{A frequency table of the top 8 most frequent values
+of categorical variable (and numerics or dates with < your specified \code{distinct_threshold} distinct values) PLUS a rows for \code{NA}
+PLUS a row for all 'Other values'}
+\item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on \code{rads.data::misc_chi_byvars}}
 }
 \description{
-This function performs the core analysis for the ETL QA pipeline, processing 
-data based on the provided configuration. It is the second step run by 
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+etl_qa_initial_results() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:etl_qa_initial_results]{apde.etl::etl_qa_initial_results()}} instead.
+
+This function performs the core analysis for the ETL QA pipeline, processing
+data based on the provided configuration. It is the second step run by
 \code{\link{etl_qa_run_pipeline}}.
 }
 \details{
-This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+This is an \emph{internal function} accessible only by use of \code{:::}, for example,
 \code{apde:::etl_qa_initial_results(...)}.
 }
 \examples{

@@ -2,6 +2,10 @@
 #' @title Run ETL Quality Assurance Pipeline
 #'
 #' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' etl_qa_run_pipeline() was deprecated in apde 0.4.4. Please use [apde.etl::etl_qa_run_pipeline()] instead.
+#' 
 #' This function runs a comprehensive quality assurance pipeline for ETL 
 #' (Extract, Transform, Load) processes.
 #' It analyzes data for missingness, variable distributions, and optionally 
@@ -59,9 +63,9 @@
 #' @param digits_prop Integer specifying the number of decimal places for rounding 
 #' proportions. Default is \code{digits_prop = 3}.
 #' @param abs_threshold Numeric threshold for flagging absolute percentage changes 
-#' in proportions. Permissible range is [0, 100]. Default is \code{abs_threshold = 3}.
+#' in proportions. Permissible range is \code{[0, 100]}. Default is \code{abs_threshold = 3}.
 #' @param rel_threshold Numeric threshold for flagging relative percentage changes 
-#' in means and medians. Permissible range is [0, 100]. Default is \code{rel_threshold = 2}.
+#' in means and medians. Permissible range is \code{[0, 100]}. Default is \code{rel_threshold = 2}.
 #' @param distinct_threshold Minimum number of distinct values needed for 
 #' calculating the minimum, mean, median, and maximum values. If the number of 
 #' distinct values is under this threshold, it will be treated as a categorical. Default is 
@@ -167,6 +171,13 @@ etl_qa_run_pipeline <- function(connection = NULL,
                                 abs_threshold = 3,
                                 rel_threshold = 2, 
                                 distinct_threshold = 1) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "etl_qa_run_pipeline()", 
+    with = "apde.etl::etl_qa_run_pipeline()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
+  
   # Set visible bindings for global variables
   
   # Capture the name of the data source if it's an R data.table/data.frame (annoying hack to extract name from within a list) ----
@@ -367,6 +378,10 @@ etl_qa_run_pipeline <- function(connection = NULL,
 #' @title Set up configuration for ETL QA pipeline
 #'
 #' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' etl_qa_setup_config() was deprecated in apde 0.4.4. Please use [apde.etl::etl_qa_setup_config()] instead.
+#' 
 #' This function creates a configuration object for the ETL QA pipeline based on 
 #' the provided parameters. It is the first step called upon by 
 #' \code{\link{etl_qa_run_pipeline}}.
@@ -467,6 +482,13 @@ etl_qa_setup_config <- function(data_source_type,
                                 abs_threshold = 3,
                                 rel_threshold = 2, 
                                 distinct_threshold = 1) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "etl_qa_setup_config()", 
+    with = "apde.etl::etl_qa_setup_config()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
+  
   # Set visible bindings for global variables
   
   # Capture the name of the data.table/data.frame and add to params (need to do first, before any arguments evaluated or modified)
@@ -573,6 +595,10 @@ etl_qa_setup_config <- function(data_source_type,
 #' @title Initial QA results for ETL QA pipeline
 #' 
 #' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' etl_qa_initial_results() was deprecated in apde 0.4.4. Please use [apde.etl::etl_qa_initial_results()] instead.
+#' 
 #' This function performs the core analysis for the ETL QA pipeline, processing 
 #' data based on the provided configuration. It is the second step run by 
 #' \code{\link{etl_qa_run_pipeline}}.
@@ -628,8 +654,12 @@ etl_qa_setup_config <- function(data_source_type,
 #' @importFrom data.table setorderv setDT
 #' 
 etl_qa_initial_results <- function(config) {
-  # Set visible bindings for global variables
-  
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "etl_qa_initial_results()", 
+    with = "apde.etl::etl_qa_initial_results()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
   
   # Get the list of data.tables based on the data source type
   data_list <- NULL
@@ -1521,6 +1551,10 @@ generate_categorical_query <- function(config) {
 #' @title Final QA results for ETL QA pipeline
 #'
 #' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' etl_qa_final_results() was deprecated in apde 0.4.4. Please use [apde.etl::etl_qa_final_results()] instead.
+#' 
 #' This function processes the initial results from \code{\link{etl_qa_initial_results}} 
 #' into a format suitable for reporting and visualization. It is the third step 
 #' run by \code{\link{etl_qa_run_pipeline}}.
@@ -1577,6 +1611,13 @@ generate_categorical_query <- function(config) {
 #' @importFrom stats setNames
 #' 
 etl_qa_final_results <- function(initial_qa_results, config) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "etl_qa_final_results()", 
+    with = "apde.etl::etl_qa_final_results()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
+  
   # Set visible bindings for global variables
   abs_change <- proportion <- varname <- time_period <- abs_proportion_change <- NULL
   value <- median <- your_data <- chi <- problem <- vartype <- count <- NULL
@@ -1707,6 +1748,10 @@ etl_qa_final_results <- function(initial_qa_results, config) {
 #' @title Export tables and graphs of ETL QA pipeline results
 #'
 #' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' etl_qa_export_results() was deprecated in apde 0.4.4. Please use [apde.etl::etl_qa_export_results()] instead.
+#' 
 #' This function exports Excel tables and PDF plots of ETL QA results. It is the 
 #' fourth and final step run by \code{\link{etl_qa_run_pipeline}}.
 #'
@@ -1759,6 +1804,13 @@ etl_qa_final_results <- function(initial_qa_results, config) {
 #' @importFrom grDevices pdf dev.off
 #' 
 etl_qa_export_results <- function(qa_results, config) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "etl_qa_export_results()", 
+    with = "apde.etl::etl_qa_export_results()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
+  
   # Set visible bindings for global variables
   varname <- all_proportion_one <- proportion <- NULL
   

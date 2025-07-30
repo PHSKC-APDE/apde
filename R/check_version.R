@@ -1,5 +1,10 @@
 #' Check if the installed apde package version is the latest available
 #'
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' check_version() was deprecated in apde 0.4.4. Please use [apde.etl::check_version()] instead.
+#' 
 #' This function checks if the installed version of the apde package is the latest
 #' available on GitHub. It compares the local version with the version in the
 #' DESCRIPTION file on the main branch of the GitHub repository.
@@ -22,7 +27,13 @@
 #'
 #' @export
 check_version <- function(print_message = TRUE) {
-
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "check_version()", 
+    with = "apde.etl::check_version()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
+  
   # Initialize return values
   result <- list(
     is_current = TRUE,

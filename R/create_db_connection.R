@@ -4,6 +4,10 @@
 #' @author Kai Fukutaki
 #' 
 #' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' create_db_connection() was deprecated in apde 0.4.4. Please use [apde.etl::create_db_connection()] instead.
+#' 
 #' Create a connection to the prod or dev servers that APDE uses
 #' 
 #' @param  server Whether we are connecting to HHSAW, inthealth, or phextractstore
@@ -23,6 +27,13 @@
 create_db_connection <- function(server = c("phextractstore", "hhsaw", "inthealth"), 
                                  prod = TRUE, 
                                  interactive = FALSE) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "create_db_connection()", 
+    with = "apde.etl::create_db_connection()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
+  
   # declare visible bindings for global variables ----
     odbc_sources <- NULL
   

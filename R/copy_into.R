@@ -1,6 +1,10 @@
 #' @title Copy Data from the Data Lake to the Data Warehouse
 #'
 #' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' copy_into_f() was deprecated in apde 0.4.4. Please use [apde.etl::copy_into()] instead.
+#' 
 #' This function copies data from the data lake to the data warehouse.
 #'
 #' @author Alastair Matheson, 2019-04-04
@@ -76,6 +80,12 @@ copy_into_f <- function(conn,
                         overwrite = T,
                         rodbc = F,
                         rodbc_dsn = "int_edw_16") {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "copy_into_f()", 
+    with = "apde.etl::copy_into()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
   
   #### SET UP SERVER ####
   if (is.null(server)) {

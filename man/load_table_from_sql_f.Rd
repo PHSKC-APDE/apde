@@ -82,6 +82,10 @@ Only 5,000 rows will be loaded to each table (4000 from the archive table if it 
 from_table). Default is NULL.}
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+load_table_from_sql_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:load_table_from_sql]{apde.etl::load_table_from_sql()}} instead.
+
 \code{load_table_from_sql} loads data from one SQL table to another using specified variables or a YAML config file.
 }
 \details{

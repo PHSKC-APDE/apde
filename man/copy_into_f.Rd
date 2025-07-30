@@ -75,18 +75,24 @@ copy_into_f(
 None
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+copy_into_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:copy_into]{apde.etl::copy_into()}} instead.
+
 This function copies data from the data lake to the data warehouse.
 }
 \details{
 Plans for future improvements:
-- Add warning when table is about to be overwritten.
-- Add other options for things we're not using (e.g., file_format).
+\itemize{
+\item Add warning when table is about to be overwritten.
+\item Add other options for things we're not using (e.g., file_format).
+}
 }
 \note{
 Plans future improvement:
 \itemize{
- \item Add warning when table is about to be overwritten
- \item Add in other options for things we're not using (e.g., file_format)
+\item Add warning when table is about to be overwritten
+\item Add in other options for things we're not using (e.g., file_format)
 }
 }
 \examples{

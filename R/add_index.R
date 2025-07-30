@@ -1,6 +1,11 @@
 #' @title Add an index to a SQL table
 #' 
-#' @description \code{add_index} adds an index to a SQL table using specified variables or a YAML config file.
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' add_index() was deprecated in apde 0.4.4. Please use [apde.etl::add_index()] instead.
+#' 
+#' \code{add_index} adds an index to a SQL table using specified variables or a YAML config file.
 #' 
 #' @details This function adds a clustered column store (CCS) or clustered (CL) 
 #' index to a SQL table using specified variables or a YAML configuration file. 
@@ -88,6 +93,13 @@ add_index <- function(conn,
                       index_vars = NULL,
                       drop_index = T, 
                       test_schema = NULL) {
+  # DEPRECATION WARNING ----
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "add_index()", 
+    with = "apde.etl::add_index()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )
   
   # INITIAL ERROR CHECKS ----
   if (!is.null(config_file)) {

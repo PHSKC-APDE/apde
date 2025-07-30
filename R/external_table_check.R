@@ -1,5 +1,11 @@
 #' @title Compare external table to source table to find changes
 #' 
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' external_table_check_f() was deprecated in apde 0.4.4. Please use [apde.etl::external_table_check()] instead.
+#' 
+#' 
 #' @param conn SQL server connection created using \code{odbc} package
 #' @param db name of database/data warehouse for source table, must be inthealth_edw or inthealth_dwhealth
 #' @param schema name of schema for source table
@@ -36,6 +42,12 @@ external_table_check_f <- function(conn,
                                    sql_display = T,
                                    sql_file_path = NULL,
                                    overwrite = T) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "external_table_check_f()", 
+    with = "apde.etl::external_table_check()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
   
   # Variables
   db <- match.arg(db)

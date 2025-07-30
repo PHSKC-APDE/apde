@@ -10,6 +10,10 @@ apde_notify_set_cred_f()
 None
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+apde_notify_set_cred_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:apde_notify_set_cred]{apde.etl::apde_notify_set_cred()}} instead.
+
 Creates and stores Outlook credentials for use with APDE Notify functions.
 }
 \examples{

@@ -15,7 +15,7 @@ load_df_bcp_f(
 )
 }
 \arguments{
-\item{dataset}{A data.frame or data.table to be loaded, or a character string 
+\item{dataset}{A data.frame or data.table to be loaded, or a character string
 specifying the filepath of a text file to be loaded.}
 
 \item{server}{The name of the SQL Server instance.}
@@ -34,14 +34,18 @@ specifying the filepath of a text file to be loaded.}
 A character vector containing the output of the BCP command.
 }
 \description{
-This function loads data from an R data.frame into a SQL Server 
-database table by saving the data.frame to an temporary file and then using 
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+load_df_bcp_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:load_df_bcp]{apde.etl::load_df_bcp()}} instead.
+
+This function loads data from an R data.frame into a SQL Server
+database table by saving the data.frame to an temporary file and then using
 the BCP (Bulk Copy Program) utility.
 }
 \details{
-This function uses the BCP utility to efficiently load data into a SQL Server 
-table. It supports both Windows authentication and SQL Server authentication. 
-If a data.frame or data.table is provided, it is first written to a temporary 
+This function uses the BCP utility to efficiently load data into a SQL Server
+table. It supports both Windows authentication and SQL Server authentication.
+If a data.frame or data.table is provided, it is first written to a temporary
 file before being loaded.
 
 Plans for future improvement ...
