@@ -17,90 +17,94 @@ etl_qa_run_pipeline(
 )
 }
 \arguments{
-\item{connection}{A DBIConnection object. \emph{Required only when 
+\item{connection}{A DBIConnection object. \emph{Required only when
 \code{data_source_type = 'sql_server'}}}
 
-\item{data_source_type}{Character string specifying the type of data source. 
+\item{data_source_type}{Character string specifying the type of data source.
 Must be one of \code{'r_dataframe'}, \code{'sql_server'}, or \code{'rads'}.}
 
-\item{data_params}{List of data related parameters specific to the data source. Not all 
-parameters are needed for all data sources. Please review the examples for details. 
+\item{data_params}{List of data related parameters specific to the data source. Not all
+parameters are needed for all data sources. Please review the examples for details.
 
 \itemize{
-  \item \code{check_chi}: Logical vector of length 1. When \code{check_chi = TRUE}, 
-  function will add any available CHI related variables to \code{cols} and 
-  will assess whether their values align with standards in 
-  \code{rads.data::misc_chi_byvars}. Default is \code{FALSE}
-  
-  \item \code{cols}: Character vector specifying the column names to analyze, 
-  e.g., \code{cols = c('race4', 'birth_weight_grams', 'birthplace_city')}
-  
-  \item \code{time_range}: Character vector of length 2 specifying the start 
-  and end of the time range, e.g., \code{time_range = c(2015, 2024)}
-  
-  \item \code{time_var}: Character string specifying the time interval variable, 
-  e.g., \code{time_var = 'chi_year'}
-  
-  \item \code{data}: Name of a data.frame or data.table that you want to assess 
-  with this function, e.g., `data = myDataTable`. \emph{Required only when 
-  \code{data_source_type = 'r_dataframe'}}.
-  
-  \item \code{function_name}: Character string specifying the relevant 
-  \code{rads::get_data_xxx} function, e.g., \code{function_name = 'get_data_birth'}. 
-  \emph{Required only when \code{data_source_type = 'rads'}}
-  
-  \item \code{kingco}: Logical vector of length 1. Identifies whether you want 
-  limit the data to King County. \emph{Required only when 
-  \code{data_source_type = 'rads'}}. Default is \code{kingco = TRUE}
-  
-  \item \code{version}: Character string specifying either \code{'final'} or 
-  \code{'stage'}. \emph{Required only when \code{data_source_type = 'rads'}}. 
-  Default is \code{version = 'stage'}
-  
-  \item \code{schema_table}: The name of the schema and table to be accessed 
-  within the SQL Server \code{connection}. Must be in the form 
-  \code{myschema.mytable}, with a period as a separator. 
-  \emph{Required only when \code{data_source_type = 'sql_server'}}  
- }}
+\item \code{check_chi}: Logical vector of length 1. When \code{check_chi = TRUE},
+function will add any available CHI related variables to \code{cols} and
+will assess whether their values align with standards in
+\code{rads.data::misc_chi_byvars}. Default is \code{FALSE}
 
-\item{output_directory}{Character string specifying the directory where output 
-files will be saved. If \code{NULL}, the current working directory is used. 
+\item \code{cols}: Character vector specifying the column names to analyze,
+e.g., \code{cols = c('race4', 'birth_weight_grams', 'birthplace_city')}
+
+\item \code{time_range}: Character vector of length 2 specifying the start
+and end of the time range, e.g., \code{time_range = c(2015, 2024)}
+
+\item \code{time_var}: Character string specifying the time interval variable,
+e.g., \code{time_var = 'chi_year'}
+
+\item \code{data}: Name of a data.frame or data.table that you want to assess
+with this function, e.g., \code{data = myDataTable}. \emph{Required only when
+\code{data_source_type = 'r_dataframe'}}.
+
+\item \code{function_name}: Character string specifying the relevant
+\code{rads::get_data_xxx} function, e.g., \code{function_name = 'get_data_birth'}.
+\emph{Required only when \code{data_source_type = 'rads'}}
+
+\item \code{kingco}: Logical vector of length 1. Identifies whether you want
+limit the data to King County. \emph{Required only when
+\code{data_source_type = 'rads'}}. Default is \code{kingco = TRUE}
+
+\item \code{version}: Character string specifying either \code{'final'} or
+\code{'stage'}. \emph{Required only when \code{data_source_type = 'rads'}}.
+Default is \code{version = 'stage'}
+
+\item \code{schema_table}: The name of the schema and table to be accessed
+within the SQL Server \code{connection}. Must be in the form
+\code{myschema.mytable}, with a period as a separator.
+\emph{Required only when \code{data_source_type = 'sql_server'}}
+}}
+
+\item{output_directory}{Character string specifying the directory where output
+files will be saved. If \code{NULL}, the current working directory is used.
 Default is \code{output_directory = NULL}.}
 
-\item{digits_mean}{Integer specifying the number of decimal places for rounding 
+\item{digits_mean}{Integer specifying the number of decimal places for rounding
 the reported mean, median, min, and max. Default is \code{digits_mean = 3}.}
 
-\item{digits_prop}{Integer specifying the number of decimal places for rounding 
+\item{digits_prop}{Integer specifying the number of decimal places for rounding
 proportions. Default is \code{digits_prop = 3}.}
 
-\item{abs_threshold}{Numeric threshold for flagging absolute percentage changes 
-in proportions. Permissible range is [0, 100]. Default is \code{abs_threshold = 3}.}
+\item{abs_threshold}{Numeric threshold for flagging absolute percentage changes
+in proportions. Permissible range is \code{[0, 100]}. Default is \code{abs_threshold = 3}.}
 
-\item{rel_threshold}{Numeric threshold for flagging relative percentage changes 
-in means and medians. Permissible range is [0, 100]. Default is \code{rel_threshold = 2}.}
+\item{rel_threshold}{Numeric threshold for flagging relative percentage changes
+in means and medians. Permissible range is \code{[0, 100]}. Default is \code{rel_threshold = 2}.}
 
-\item{distinct_threshold}{Minimum number of distinct values needed for 
-calculating the minimum, mean, median, and maximum values. If the number of 
-distinct values is under this threshold, it will be treated as a categorical. Default is 
+\item{distinct_threshold}{Minimum number of distinct values needed for
+calculating the minimum, mean, median, and maximum values. If the number of
+distinct values is under this threshold, it will be treated as a categorical. Default is
 \code{distinct_threshold = 1}.}
 }
 \value{
 A list containing the final results from the ETL QA pipeline. Specifically, it includes:
-  \item{config}{Configuration settings used for the analysis}
-  \item{initial}{Initial ETL QA results}
-  \item{final}{Final ETL QA results - ready for reporting}
-  \item{exported}{File paths for exported tables and plots}
+\item{config}{Configuration settings used for the analysis}
+\item{initial}{Initial ETL QA results}
+\item{final}{Final ETL QA results - ready for reporting}
+\item{exported}{File paths for exported tables and plots}
 }
 \description{
-This function runs a comprehensive quality assurance pipeline for ETL 
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+etl_qa_run_pipeline() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:etl_qa_run_pipeline]{apde.etl::etl_qa_run_pipeline()}} instead.
+
+This function runs a comprehensive quality assurance pipeline for ETL
 (Extract, Transform, Load) processes.
-It analyzes data for missingness, variable distributions, and optionally 
+It analyzes data for missingness, variable distributions, and optionally
 checks compliance with CHI (Community Health Indicators) standards.
 }
 \details{
-The function provides identical output whether using \code{rads}, providing a 
-data.table that is in R's memory, or processing data directly on MS SQL Server. 
-The key is to correctly set up the arguments. Please refer to the examples 
+The function provides identical output whether using \code{rads}, providing a
+data.table that is in R's memory, or processing data directly on MS SQL Server.
+The key is to correctly set up the arguments. Please refer to the examples
 below for models that you should follow.
 }
 \examples{
@@ -173,9 +177,9 @@ all.equal(qa.rads$final, qa.sql$final)
 }
 \seealso{
 \itemize{
-  \item \code{\link{etl_qa_setup_config}} for Step 1: Creating the \code{config} object
-  \item \code{\link{etl_qa_initial_results}} for Step 2: Initial ETL QA analysis
-  \item \code{\link{etl_qa_final_results}} for Step 3: Final / formatted ETL QA analysis
-  \item \code{\link{etl_qa_export_results}} for Step 4: Export of tables and plots 
+\item \code{\link{etl_qa_setup_config}} for Step 1: Creating the \code{config} object
+\item \code{\link{etl_qa_initial_results}} for Step 2: Initial ETL QA analysis
+\item \code{\link{etl_qa_final_results}} for Step 3: Final / formatted ETL QA analysis
+\item \code{\link{etl_qa_export_results}} for Step 4: Export of tables and plots
 }
 }

@@ -1,7 +1,7 @@
 Package: apde
 Type: Package
 Title: Common functions used in APDE's work
-Version: 0.4.3
+Version: 0.4.4
 Author@R: c(
   person("Alastair", "Matheson", email = "alastair.matheson@kingcounty.gov", role = c("aut", "cre")))
 Author: Alastair Matheson [aut, cre]
@@ -19,11 +19,11 @@ Imports:
     configr,
     data.table,
     dplyr,
-    DBI, 
+    DBI,
     glue,
     ggplot2,
     httr,
-    keyring, 
+    keyring,
     knitr,
     odbc,
     openxlsx,
@@ -33,9 +33,10 @@ Imports:
     scales,
     shiny,
     shinyWidgets,
-    svDialogs, 
+    svDialogs,
     sys,
-    yaml
+    yaml,
+    lifecycle
 Remotes:
     github::PHSKC-APDE/rads.data, github::PHSKC-APDE/rads
 Suggests: 
@@ -45,3 +46,4 @@ Suggests:
     testthat
 VignetteBuilder: 
     knitr
+Roxygen: list(markdown = TRUE)

@@ -42,7 +42,9 @@ external_table_check_f(
 \item{overwrite}{overwrite sql script, appends if FALSE}
 }
 \description{
-Compare external table to source table to find changes
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+external_table_check_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:external_table_check]{apde.etl::external_table_check()}} instead.
 }
 \examples{
  \dontrun{

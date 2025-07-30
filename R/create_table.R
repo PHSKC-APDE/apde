@@ -1,6 +1,11 @@
 #' @title Create a SQL table
 #' 
-#' @description \code{create_table} creates a SQL table using specified variables or a YAML config file.
+#' @description 
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' create_table() was deprecated in apde 0.4.4. Please use [apde.etl::create_table()] instead.
+#' 
+#' \code{create_table} creates a SQL table using specified variables or a YAML config file.
 #' 
 #' @details This function creates tables in a SQL database using specified variables or a YAML configuration file. 
 #' Users can specify some input functions (e.g., to_table) and rely on the config 
@@ -134,7 +139,12 @@ create_table <- function(conn,
                          years = NULL,
                          years_vars = NULL,
                          test_schema = NULL) {
-  
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "create_table()", 
+    with = "apde.etl::create_table()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
   
   # INITIAL ERROR CHECKS ----
   # Check if the config provided is a local file or on a webpage

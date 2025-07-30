@@ -26,37 +26,37 @@ table_duplicate_f(
 
 \item{conn_to}{Name of the connection to the TO SQL database}
 
-\item{server_to}{Name of the server/odbc for the TO SQL database. 
-***IMPORTANT*** For any Azure based duplication, there must be a keyring with 
+\item{server_to}{Name of the server/odbc for the TO SQL database.
+\emph{\strong{IMPORTANT}} For any Azure based duplication, there must be a keyring with
 a service name that matches the server_to parameter}
 
 \item{db_to}{Name of the TO SQL database}
 
-\item{table_df}{data.frame that can hold a list of FROM schema, FROM tables 
+\item{table_df}{data.frame that can hold a list of FROM schema, FROM tables
 (required), TO schema, and TO tables}
 
-\item{from_schema}{Variable for FROM schema for either a single table or can 
+\item{from_schema}{Variable for FROM schema for either a single table or can
 populate any missing data in the table_df from_schema column}
 
 \item{from_table}{Variable for FROM table for duplicating a single table}
 
-\item{to_schema}{Variable for TO schema for either a single table or can populate 
-any missing data in the table_df to_schema column, can be blank and use the 
+\item{to_schema}{Variable for TO schema for either a single table or can populate
+any missing data in the table_df to_schema column, can be blank and use the
 from_schema on TO database}
 
-\item{to_table}{Variable for TO table for either a single table or can populate 
-any missing data in the table_df to_table column, can be blank and use the 
+\item{to_table}{Variable for TO table for either a single table or can populate
+any missing data in the table_df to_table column, can be blank and use the
 from_table on TO database}
 
 \item{to_table_prefix}{Variable of a prefix to be added before the TO table name}
 
-\item{confirm_tables}{If \code{TRUE}, will require user confirm the list of 
+\item{confirm_tables}{If \code{TRUE}, will require user confirm the list of
 tables being duplicated}
 
-\item{delete_table}{If \code{TRUE}, will delete old TO tables, if \code{FALSE}, 
+\item{delete_table}{If \code{TRUE}, will delete old TO tables, if \code{FALSE},
 will rename old TO tables}
 
-\item{delete_table_suffix}{Variable of a suffix to be added after the name of 
+\item{delete_table_suffix}{Variable of a suffix to be added after the name of
 old TO tables}
 
 \item{table_structure_only}{If \code{TRUE}, will only copy the table structure
@@ -66,6 +66,10 @@ of old TO new tables}
 None
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+table_duplicate_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:table_duplicate]{apde.etl::table_duplicate()}} instead.
+
 Made for smaller table, e.g., reference tables
 }
 \details{

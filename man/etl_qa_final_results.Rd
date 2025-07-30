@@ -13,17 +13,21 @@ etl_qa_final_results(initial_qa_results, config)
 }
 \value{
 A list containing formatted and combined results that consists of:
-  \item{missingness}{Structured summary of the proportion of missing data per variable and time point}
-  \item{values}{Combined table with the frequency of categorical variables and simple statistics for numeric and date / datetime variables}
-  \item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on \code{rads.data::misc_chi_byvars}}
+\item{missingness}{Structured summary of the proportion of missing data per variable and time point}
+\item{values}{Combined table with the frequency of categorical variables and simple statistics for numeric and date / datetime variables}
+\item{chi_standards}{Comparison of CHI (Community Health Indicator) variables values with those expected based on \code{rads.data::misc_chi_byvars}}
 }
 \description{
-This function processes the initial results from \code{\link{etl_qa_initial_results}} 
-into a format suitable for reporting and visualization. It is the third step 
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+etl_qa_final_results() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:etl_qa_final_results]{apde.etl::etl_qa_final_results()}} instead.
+
+This function processes the initial results from \code{\link{etl_qa_initial_results}}
+into a format suitable for reporting and visualization. It is the third step
 run by \code{\link{etl_qa_run_pipeline}}.
 }
 \details{
-This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+This is an \emph{internal function} accessible only by use of \code{:::}, for example,
 \code{apde:::etl_qa_final_results(...)}.
 }
 \examples{

@@ -13,6 +13,10 @@ apde_keyring_set_f(keyring = NA)
 A message indicating the keyring and username that have been set.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+apde_keyring_set_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:apde_keyring_set]{apde.etl::apde_keyring_set()}} instead.
+
 This function creates or updates a keyring with a specified username.
 }
 \examples{

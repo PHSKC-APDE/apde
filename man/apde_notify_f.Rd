@@ -17,7 +17,9 @@ apde_notify_f(msg_id = NULL, msg_name = NULL, vars)
 None
 }
 \description{
-Send APDE Notification
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+apde_notify_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:apde_notify]{apde.etl::apde_notify()}} instead.
 }
 \examples{
  \dontrun{

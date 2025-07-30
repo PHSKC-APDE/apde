@@ -1,5 +1,11 @@
 #' @title Load an R Data.Frame to SQL Server Using BCP (Bulk Copy Program)
-#' @description This function loads data from an R data.frame into a SQL Server 
+#' 
+#' @description 
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' load_df_bcp_f() was deprecated in apde 0.4.4. Please use [apde.etl::load_df_bcp()] instead.
+#' 
+#' This function loads data from an R data.frame into a SQL Server 
 #' database table by saving the data.frame to an temporary file and then using 
 #' the BCP (Bulk Copy Program) utility.
 #' @author Jeremy Whitehurst, 2025-02-05
@@ -47,6 +53,12 @@ load_df_bcp_f <- function(dataset,
                        user = NULL, 
                        pass = NULL
 ) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "load_df_bcp_f()", 
+    with = "apde.etl::load_df_bcp()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
   
   if(is.character(dataset)){
     filepath = dataset

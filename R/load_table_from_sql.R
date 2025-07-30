@@ -1,6 +1,11 @@
 #' @title Load data from one SQL table to another
 #' 
-#' @description \code{load_table_from_sql} loads data from one SQL table to another using specified variables or a YAML config file.
+#' @description 
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' load_table_from_sql_f() was deprecated in apde 0.4.4. Please use [apde.etl::load_table_from_sql()] instead.
+#'  
+#' \code{load_table_from_sql} loads data from one SQL table to another using specified variables or a YAML config file.
 #' 
 #' @details This function loads data file to an already existing SQL table using 
 #' specified variables or a YAML configuration file. The function is essentially a 
@@ -110,6 +115,13 @@ load_table_from_sql_f <- function(
   drop_index = T,
   test_schema = NULL
 ) {
+  
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "load_table_from_sql_f()", 
+    with = "apde.etl::load_table_from_sql()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
   
   # Set visible bindings for global variables
   test_mode <- db_claims <- NULL

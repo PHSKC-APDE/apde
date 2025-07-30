@@ -1,6 +1,11 @@
 #' @title Clean up reference address tables
 #' 
-#' @description \code{deduplicate_addresses} removes duplicate addresses in the ref tables and synchronize.
+#' @description 
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' deduplicate_addresses() was deprecated in apde 0.4.4. Please use [apde.etl::deduplicate_addresses()] instead.
+#' 
+#' \code{deduplicate_addresses} removes duplicate addresses in the ref tables and synchronize.
 #' 
 #' @details This function brings in all addresses currently in the reference tables 
 #' and deduplicates them. Because there is a stage -> final workflow, the stage version 
@@ -19,6 +24,12 @@
 
 deduplicate_addresses <- function(conn_hhsaw = NULL,
                                   conn_phclaims = NULL) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "deduplicate_addresses()", 
+    with = "apde.etl::deduplicate_addresses()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  )  
   
   # Set visible bindings for global variables
   row_cnt <- NULL

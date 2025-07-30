@@ -13,16 +13,20 @@ etl_qa_export_results(qa_results, config)
 }
 \value{
 A list the file paths for the exported data:
-  \item{pdf_missing}{File path to PDF of plots of data missingness over time}
-  \item{pdf_values}{File path to PDF of plots of frequency and statistical changes over time}
-  \item{excel}{File path to Excel file with tabs for missingness, values, CHI comparisons}
+\item{pdf_missing}{File path to PDF of plots of data missingness over time}
+\item{pdf_values}{File path to PDF of plots of frequency and statistical changes over time}
+\item{excel}{File path to Excel file with tabs for missingness, values, CHI comparisons}
 }
 \description{
-This function exports Excel tables and PDF plots of ETL QA results. It is the 
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+etl_qa_export_results() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:etl_qa_export_results]{apde.etl::etl_qa_export_results()}} instead.
+
+This function exports Excel tables and PDF plots of ETL QA results. It is the
 fourth and final step run by \code{\link{etl_qa_run_pipeline}}.
 }
 \details{
-This is an \emph{internal function} accessible only by use of \code{:::}, for example, 
+This is an \emph{internal function} accessible only by use of \code{:::}, for example,
 \code{apde:::etl_qa_export_results(...)}.
 }
 \examples{

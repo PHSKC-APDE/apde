@@ -1,6 +1,11 @@
 # apde_notify_set_cred_f() ----
 #' @title Set Outlook Credentials for APDE Notify
-#' @description Creates and stores Outlook credentials for use with APDE Notify functions.
+#' @description 
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' apde_notify_set_cred_f() was deprecated in apde 0.4.4. Please use [apde.etl::apde_notify_set_cred()] instead.
+#' 
+#' Creates and stores Outlook credentials for use with APDE Notify functions.
 #' @importFrom svDialogs dlg_input
 #' @importFrom blastula create_smtp_creds_key
 #' @return None
@@ -10,6 +15,13 @@
 #'   # ENTER EXAMPLES HERE
 #'  }
 apde_notify_set_cred_f <- function() {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_set_cred_f()", 
+    with = "apde.etl::apde_notify_set_cred()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   ## CREATING THE OUTLOOK CREDENTIAL
   ## ENTER EMAIL ADDRESS
   email <- svDialogs::dlg_input("Enter Email address:", paste0(Sys.info()["user"], "@kingcounty.gov"))$res
@@ -34,6 +46,13 @@ apde_notify_set_cred_f <- function() {
 #'   # ENTER EXAMPLES HERE
 #'  }
 apde_notify_msgs_get_f <- function() {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_msgs_get_f()", 
+    with = "apde.etl::apde_notify_msgs_get()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   msgs <- DBI::dbGetQuery(conn, 
                           "SELECT *                           
@@ -63,6 +82,13 @@ apde_notify_msg_set_f <- function(msg_id = 0,
                                   msg_subject,
                                   msg_body,
                                   msg_from) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_msg_set_f()", 
+    with = "apde.etl::apde_notify_msg_set()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   if(msg_id > 0) { 
     msg <- apde_notify_msg_get_f(msg_id)
@@ -120,6 +146,13 @@ apde_notify_msg_set_f <- function(msg_id = 0,
 #'  }
 apde_notify_msg_get_f <- function(msg_id = NULL,
                                   msg_name = NULL) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_msg_get_f()", 
+    with = "apde.etl::apde_notify_msg_get()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   if(is.null(msg_id)) {
     msg_id <- apde_notify_msg_id_get_f(msg_name = msg_name)
@@ -148,6 +181,13 @@ apde_notify_msg_get_f <- function(msg_id = NULL,
 #'  }
 apde_notify_msg_id_get_f <- function(msg_id = NULL,
                                      msg_name = NULL) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_msg_id_get_f()", 
+    with = "apde.etl::apde_notify_msg_id_get()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   msgs <- apde_notify_msgs_get_f()
   if(is.null(msg_id)) {
@@ -171,6 +211,13 @@ apde_notify_msg_id_get_f <- function(msg_id = NULL,
 #'   # ENTER EXAMPLES HERE
 #'  }
 apde_notify_addresses_get_f <- function() {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_addresses_get_f()", 
+    with = "apde.etl::apde_notify_addresses_get()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   addresses <- DBI::dbGetQuery(conn, "SELECT * 
                                FROM [apde].[notify_addresses] 
@@ -192,6 +239,13 @@ apde_notify_addresses_get_f <- function() {
 #'  }
 apde_notify_address_get_f <- function(address_id = NULL,
                                       address = NULL) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_address_get_f()", 
+    with = "apde.etl::apde_notify_address_get()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   address_id <- apde_notify_address_id_get_f(address_id = address_id,
                                              address = address)
@@ -221,6 +275,13 @@ apde_notify_address_get_f <- function(address_id = NULL,
 apde_notify_address_set_f <- function(address_id = NULL,
                                       address = NULL,
                                       new_address) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_address_set_f()", 
+    with = "apde.etl::apde_notify_address_set()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   address_id <- apde_notify_address_id_get_f(address_id = address_id,
                                              address = address)
@@ -249,6 +310,13 @@ apde_notify_address_set_f <- function(address_id = NULL,
 #'   # ENTER EXAMPLES HERE
 #'  }
 apde_notify_address_create_f <- function(address) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_address_create_f()", 
+    with = "apde.etl::apde_notify_address_create()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   address_id <- apde_notify_address_id_get_f(address = address)
   if(length(address_id) > 0) {
@@ -277,6 +345,13 @@ apde_notify_address_create_f <- function(address) {
 #'  }
 apde_notify_address_delete_f <- function(address_id = NULL,
                                          address = NULL) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_address_delete_f()", 
+    with = "apde.etl::apde_notify_address_delete()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   address_id <- apde_notify_address_id_get_f(address_id = address_id,
                                              address = address)
@@ -305,6 +380,13 @@ apde_notify_address_delete_f <- function(address_id = NULL,
 #'  }
 apde_notify_address_id_get_f <- function(address_id = NULL,
                                          address = NULL) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_address_id_get_f()", 
+    with = "apde.etl::apde_notify_address_id_get()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   addresses <- apde_notify_addresses_get_f()
   if(is.null(address_id)) {
@@ -332,6 +414,13 @@ apde_notify_address_id_get_f <- function(address_id = NULL,
 #'  }
 apde_notify_list_get_f <- function(msg_id = NULL,
                                    msg_name = NULL) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_list_get_f()", 
+    with = "apde.etl::apde_notify_list_get()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   msg_id <- apde_notify_msg_id_get_f(msg_id = msg_id,
                                      msg_name = msg_name)
@@ -365,6 +454,12 @@ apde_notify_list_get_f <- function(msg_id = NULL,
 apde_notify_list_set_f <- function(msg_id = NULL,
                                    msg_name = NULL,
                                    choices) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_list_set_f()", 
+    with = "apde.etl::apde_notify_list_set()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   msg_id <- apde_notify_msg_id_get_f(msg_id = msg_id,
                                      msg_name = msg_name)
@@ -393,6 +488,11 @@ apde_notify_list_set_f <- function(msg_id = NULL,
 
 # apde_notify_f() ----
 #' @title Send APDE Notification
+#' @description
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' apde_notify_f() was deprecated in apde 0.4.4. Please use [apde.etl::apde_notify()] instead.
+#' 
 #' @param msg_id Integer. ID of the message to send.
 #' @param msg_name Character. Name of the message to send.
 #' @param vars List. Variables to substitute in the message body.
@@ -408,6 +508,13 @@ apde_notify_list_set_f <- function(msg_id = NULL,
 apde_notify_f <- function(msg_id = NULL,
                           msg_name = NULL,
                           vars) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_f()", 
+    with = "apde.etl::apde_notify()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   emailReady <- tryCatch(
     { length(blastula::creds_key("outlook")) },
     error = function(x) { return(0) })
@@ -439,7 +546,12 @@ apde_notify_f <- function(msg_id = NULL,
 
 # apde_notify_menu_f() ----
 #' @title Launch APDE Notify Menu
-#' @description Launches a Shiny app for managing APDE Notify messages and email lists.
+#' @description 
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' apde_notify_menu_f() was deprecated in apde 0.4.4. Please use [apde.etl::apde_notify_menu()] instead.
+#' 
+#' Launches a Shiny app for managing APDE Notify messages and email lists.
 #' @importFrom shiny fluidPage titlePanel fluidRow column selectInput textInput textAreaInput actionButton hr textOutput observeEvent updateTextInput updateTextAreaInput updateSelectInput reactiveValues renderText shinyApp
 #' @importFrom shinyWidgets multiInput updateMultiInput
 #' @return A Shiny app object
@@ -449,6 +561,13 @@ apde_notify_f <- function(msg_id = NULL,
 #'   # ENTER EXAMPLES HERE
 #'  }
 apde_notify_menu_f <- function() {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "apde_notify_menu_f()", 
+    with = "apde.etl::apde_notify_menu()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   conn <- create_db_connection("hhsaw", interactive = F, prod = T)
   address_list <- apde_notify_addresses_get_f()
   current_list <- NA

@@ -1,6 +1,11 @@
 #' @title Load a data file to a SQL table
 #' 
-#' @description \code{load_table_from_file} loads a file data to a SQL table using specified variables or a YAML config file.
+#' @description 
+#' `r lifecycle::badge("deprecated")`
+#' 
+#' load_table_from_file() was deprecated in apde 0.4.4. Please use [apde.etl::load_table_from_file()] instead.
+#' 
+#' \code{load_table_from_file} loads a file data to a SQL table using specified variables or a YAML config file.
 #' 
 #' @details This function loads a data file to an already existing SQL table using 
 #' specified variables or a YAML configuration file. The function is essentially a 
@@ -165,6 +170,13 @@ load_table_from_file <- function(conn,
                                  tablock = F,
                                  test_schema = NULL,
                                  use_sys = F) {
+  lifecycle::deprecate_warn(
+    when = "0.4.4",
+    what = "load_table_from_file()", 
+    with = "apde.etl::load_table_from_file()",
+    details = "The apde package is deprecated. Please use apde.etl instead."
+  ) 
+  
   
   # Set visible bindings for global variables
   conn_inner <- NULL

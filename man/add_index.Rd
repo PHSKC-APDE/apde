@@ -60,6 +60,10 @@ Will use the to_schema (specified or in the YAML file) to make a new table name 
 when the user has an existing YAML file and does not want to overwrite it. Default is NULL.}
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+add_index() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:add_index]{apde.etl::add_index()}} instead.
+
 \code{add_index} adds an index to a SQL table using specified variables or a YAML config file.
 }
 \details{

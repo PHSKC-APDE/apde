@@ -90,6 +90,10 @@ Will use the to_schema (specified or in the YAML file) to make a new table name 
 when the user has an existing YAML file and does not want to overwrite it. Default is NULL.}
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+create_table() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:create_table]{apde.etl::create_table()}} instead.
+
 \code{create_table} creates a SQL table using specified variables or a YAML config file.
 }
 \details{

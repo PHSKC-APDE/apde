@@ -125,6 +125,10 @@ informative interface in the R console. Helpful for debugging when BSP doesn't w
 Default is \code{FALSE}.}
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+load_table_from_file() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:load_table_from_file]{apde.etl::load_table_from_file()}} instead.
+
 \code{load_table_from_file} loads a file data to a SQL table using specified variables or a YAML config file.
 }
 \details{

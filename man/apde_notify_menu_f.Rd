@@ -10,6 +10,10 @@ apde_notify_menu_f()
 A Shiny app object
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#deprecated}{\figure{lifecycle-deprecated.svg}{options: alt='[Deprecated]'}}}{\strong{[Deprecated]}}
+
+apde_notify_menu_f() was deprecated in apde 0.4.4. Please use \code{\link[apde.etl:apde_notify_menu]{apde.etl::apde_notify_menu()}} instead.
+
 Launches a Shiny app for managing APDE Notify messages and email lists.
 }
 \examples{
